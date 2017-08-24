@@ -1,0 +1,27 @@
+﻿Build started 06/04/2013 21:44:35.
+     1>Project "I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\tinyxml_lib.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         T:\Second Win\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W4 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _LIB /D _VC80_UPGRADE=0x0600 /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\\" /Fd"I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\vc100.pdb" /FR"I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\\" /Gd /TP /analyze- /errorReport:prompt tinystr.cpp tinyxml.cpp tinyxmlerror.cpp tinyxmlparser.cpp
+         tinyxmlparser.cpp
+         tinyxmlerror.cpp
+         tinyxml.cpp
+         tinystr.cpp
+         Generating Code...
+       Lib:
+         T:\Second Win\Microsoft Visual Studio 10.0\VC\bin\Lib.exe /OUT:"I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.lib" /NOLOGO I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinystr.obj
+         I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.obj
+         I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxmlerror.obj
+         I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxmlparser.obj
+         tinyxml_lib.vcxproj -> I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.lib
+       BscMake:
+         T:\Second Win\Microsoft Visual Studio 10.0\VC\bin\bscmake.exe /nologo /o"I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.bsc" I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinystr.sbr I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.sbr I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxmlerror.sbr I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxmlparser.sbr
+       FinalizeBuildStatus:
+         Deleting file "I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.unsuccessfulbuild".
+         Touching "I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\Debugtinyxml\tinyxml.lastbuildstate".
+     1>Done Building Project "I:\Important\Programming\C++\Classes\TinyXML\tinyxml_2_6_2\tinyxml\tinyxml_lib.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:02.20
