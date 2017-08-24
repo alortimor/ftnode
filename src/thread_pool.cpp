@@ -11,7 +11,7 @@ thread_pool::thread_pool( int pool_size ) : work_ios{std::make_unique<boost::asi
     thread_grp.create_thread( boost::bind( &boost::asio::io_service::run, &ios ) );
 }
 
-// Destructor 2
+// Destructor
 thread_pool::~thread_pool () {
   work_ios.reset();
   try  { thread_grp.join_all(); } // ensure all threads complete before quitting
