@@ -10,8 +10,7 @@
 #include <sstream>
 #include <iostream>
 
-inline std::string time_stamp()
-{
+inline std::string time_stamp() {
 	std::stringstream buffer;
 	using std::chrono::system_clock;
 	std::time_t tt = system_clock::to_time_t(system_clock::now());
