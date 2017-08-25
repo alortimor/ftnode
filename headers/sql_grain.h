@@ -18,7 +18,7 @@ class sql_grain {
     const std::string get_sql() const noexcept ;
     const int get_statement_id() const noexcept ;
     const bool is_updated() const noexcept ;
-    const int get_rows() const noexcept ;
+    const int get_rows_affected() const noexcept ;
     const bool get_is_result() const noexcept;
     void set_db_return_values(bool, long ) noexcept;
 

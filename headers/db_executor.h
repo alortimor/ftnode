@@ -11,32 +11,6 @@
 
 extern logger exception_log;
 
-/*struct sql_grain {
-  private:
-    int  statement_id{0};
-    bool is_result {false};
-    long rows{0};
-    const std::string sql;
-    bool updated{false};
-    std::vector<std::string> v_res; // vector of result, only used for holding sql result sets.
-
-  public:
-    sql_grain(int sid, const std::string & statement) noexcept : statement_id{sid},  sql{statement}  { }
-    sql_grain() = delete;
-
-    const std::string get_sql() const noexcept { return sql; };
-    const int get_statement_id() const noexcept { return statement_id; };
-    const bool is_updated() const noexcept { return updated; };
-    const int get_rows() const noexcept { return rows; };
-    const bool get_is_result() const noexcept { return is_result; };
-    void set_update(const bool b) noexcept { updated=b ; };
-
-    void set_db_return_values(bool is_result_set, long rows_affected) noexcept {
-       is_result = is_result_set;
-       rows = rows_affected;
-    };
-};*/
-
 class db_executor {
   private:
     int db_id;
@@ -73,10 +47,8 @@ class db_executor {
     std::string const get_begin_statement() const;
     std::string const get_connection_str() const;
     std::string const get_product () const; // returns "oracle", "postgre" .. etc
-    int const db_sql_grain_rows(int) const; // number of rows specific to a statement id
-    bool const db_sql_grain_is_result(int) const; // result specific to a statement id
-
-    bool is_complete();
+    int const get_rows_affected(int) const; // number of rows specific to a statement id
+    bool const get_is_result(int) const; // result specific to a statement id
 
     void exec_begin(); // the purpose of this is to explicitly execute the begin
     void execute_sql_grains ();

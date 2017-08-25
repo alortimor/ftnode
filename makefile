@@ -1,5 +1,5 @@
-PROJECT_NAME := db_service 
-PROJECT_SRCS := $(wildcard ./db_service.cpp) $(wildcard ./src/*.cpp) $(wildcard ./tinyxml/*.cpp) 
+PROJECT_NAME := ftnode 
+PROJECT_SRCS := $(wildcard ./ftnode.cpp) $(wildcard ./src/*.cpp) $(wildcard ./tinyxml/*.cpp) 
 PROJECT_OBJS := ${PROJECT_SRCS:.cpp=.o}
 PROJECT_INCLUDE_DIRS := ../SQLAPI/include ./src/header ./tinyxml
 PROJECT_LIBRARY_DIRS := 

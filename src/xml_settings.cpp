@@ -3,26 +3,27 @@
 #include "../headers/xml_settings.h"
 #include "../tinyxml/tinyxml.h"
 
-/*static map<int,int> create_map()
+std::map<std::string, SAClient_t> create_con_map()
 {
-  map<int,int> m;
-  m[1] = 2;
-  m[3] = 4;
-  m[5] = 6;
+  std::map<std::string, SAClient_t> m;
+  m["oracle"]       = SA_Oracle_Client;
+  m["postgres"]     = SA_PostgreSQL_Client;
+  m["sqlanywhere"]  = SA_SQLAnywhere_Client;
   return m;
-}*/
+}
+
+std::map<std::string, SAIsolationLevel_t> create_iso_level_map()
+{
+  std::map<std::string, SAIsolationLevel_t> m;
+  m["SA_RepeatableRead"]       = SA_RepeatableRead;
+  m["SA_Serializable"]     = SA_Serializable;
+  return m;
+}
 
 
-std::map<std::string, SAClient_t> db_con_id{
-    {"oracle", SA_Oracle_Client},
-    {"postgres", SA_PostgreSQL_Client},
-    {"sqlanywhere", SA_SQLAnywhere_Client}
-};
+const std::map<std::string, SAClient_t> db_con_id = create_con_map();
 // map for isolation level constants
-std::map<std::string, SAIsolationLevel_t> db_iso_level {
-    {"SA_RepeatableRead", SA_RepeatableRead},
-    {"SA_Serializable", SA_Serializable}
-};
+const std::map<std::string, SAIsolationLevel_t> db_iso_level = create_iso_level_map();
 
 namespace xmls {
 

@@ -11,8 +11,8 @@
 
 class TiXmlNode;
 
-extern std::map<std::string, SAClient_t> db_con_id;
-extern std::map<std::string, SAIsolationLevel_t> db_iso_level;
+extern const std::map<std::string, SAClient_t> db_con_id;
+extern const std::map<std::string, SAIsolationLevel_t> db_iso_level;
 
 namespace xmls {
 // constants

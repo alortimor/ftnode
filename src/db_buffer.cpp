@@ -14,7 +14,7 @@ db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_si
   }
   //excep_log(std::to_string(xml_db_sources.size()));
   const auto& xml_db_sources = settings().get(xmls::ftnode_mw::DBSOURCES); // ELEM_DBSOURCES);
-  for(int i{0}; i < xml_db_sources.size(); ++i)
+  for(int i{0}; i < static_cast<int>(xml_db_sources.size()); ++i)
   {
       auto xml_db_source = static_cast<xmls::db_source*>(xml_db_sources[i].get());
       v_dbi.emplace_back( db_info{xml_db_source->id, xml_db_source->product,xml_db_source->conn_str,

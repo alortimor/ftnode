@@ -28,7 +28,7 @@ class threadsafe_log {
 
   public:
     explicit threadsafe_log (const std::string & path, const std::string & file_name) {
-		if(!file_path.empty())
+		if(!file_name.empty())
 			file_path = path + "/";
 	  	file_path += file_name + "_" + time_stamp() + ".log";
       std::ofstream file{file_path, std::fstream::app}; // open file in append mode so nothing is ever overwritten
@@ -85,7 +85,7 @@ class logger {
 #ifdef EXCEPTION_LOG
 inline void excep_log_(const std::string & msg)
 {
-	static logger exception_log( std::make_shared<threadsafe_log>("", "exceptions"));
+	static logger exception_log( std::make_shared<threadsafe_log>("log", "exceptions"));
 	exception_log.write(msg);
 }
 

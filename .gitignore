@@ -1,5 +1,10 @@
 tinyxml/*.*
 *.o
-exception*.log
+log/exception*.log
 *.gch*
 settings.xml
+sadiags.xml
+conn.log
+ftnode
+db_service
+

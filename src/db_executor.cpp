@@ -22,11 +22,11 @@ std::string const db_executor::get_begin_statement() const {
   return dbi.begin_statement;
 }
 
-int const db_executor::db_sql_grain_rows(int statement_id) const {
-  return v_sg.at(statement_id).get_rows();
+int const db_executor::get_rows_affected(int statement_id) const {
+  return v_sg.at(statement_id).get_rows_affected();
 }
 
-bool const db_executor::db_sql_grain_is_result(int statement_id) const {
+bool const db_executor::get_is_result(int statement_id) const {
   return v_sg.at(statement_id).get_is_result();
 }
 
@@ -43,14 +43,6 @@ void db_executor::exec_begin() {
   }
 }
 
-bool db_executor::is_complete() {
-  execute_completed = true;
-  for (const auto & sg : v_sg) {
-    execute_completed = sg.is_updated();
-    if (!execute_completed) break;
-  }
-  return execute_completed;
-}
 
 void db_executor::commit_rollback(char c) {
   if (c=='c') {
