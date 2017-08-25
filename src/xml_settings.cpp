@@ -1,5 +1,19 @@
+#include <map>
+#include </home/mw/SQLAPI/include/SQLAPI.h>
 #include "../headers/xml_settings.h"
 #include "../tinyxml/tinyxml.h"
+
+
+std::map<std::string, SAClient_t> db_con_id{
+    {"oracle", SA_Oracle_Client},
+    {"postgres", SA_PostgreSQL_Client},
+    {"sqlanywhere", SA_SQLAnywhere_Client}
+};
+// map for isolation level constants
+std::map<std::string, SAIsolationLevel_t> db_iso_level {
+    {"SA_RepeatableRead", SA_RepeatableRead},
+    {"SA_Serializable", SA_Serializable}
+};
 
 namespace xmls {
 
@@ -13,8 +27,7 @@ const std::string ftnode_mw::DBSOURCES{"dbsources"};
         const std::string ftnode_mw_dbsources_db::PRODUCT{"product"};
         const std::string ftnode_mw_dbsources_db::ID{"id"};
         const std::string ftnode_mw_dbsources_db::CONSTR{"cstr"};
-        const std::string ftnode_mw_dbsources_db::BEG_SEL_TR{"beg_sel_tr"};
-        const std::string ftnode_mw_dbsources_db::BEG_UDI_TR{"beg_udi_tr"};
+        const std::string ftnode_mw_dbsources_db::BEG_TR{"beg_tr"};
         const std::string ftnode_mw_dbsources_db::ISO_LEV{"iso_lev"};
 const std::string ftnode_mw::ENDPOINT{"endpoint"};
     const std::string ftnode_mw_endpoint::IP{"ip"};
@@ -110,8 +123,7 @@ void xml_settings::proc_db_sources(TiXmlNode* dbsources_node)
             source->user = elem->Attribute(xmls::ftnode_mw_dbsources_db::USER.c_str());
             source->name = elem->Attribute(xmls::ftnode_mw_dbsources_db::NAME.c_str());
             source->conn_str = elem->Attribute(xmls::ftnode_mw_dbsources_db::CONSTR.c_str());
-            source->begin_select_tr = elem->Attribute(xmls::ftnode_mw_dbsources_db::BEG_SEL_TR.c_str());
-            source->begin_udi_tr = elem->Attribute(xmls::ftnode_mw_dbsources_db::BEG_UDI_TR.c_str());
+            source->begin_tr = elem->Attribute(xmls::ftnode_mw_dbsources_db::BEG_TR.c_str());
             source->iso_level = elem->Attribute(xmls::ftnode_mw_dbsources_db::ISO_LEV.c_str());
             elem->Attribute(xmls::ftnode_mw_dbsources_db::ID.c_str(), &(source->id));
 

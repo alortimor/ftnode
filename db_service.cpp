@@ -6,11 +6,14 @@
 #include "./headers/thread_pool.h"
 #include "./headers/db_buffer.h"
 #include "./headers/logger.h"
-
+#include "./headers/xml_settings.h"
+      
 int main() {
+  settings().load_settings_xml(xmls::DEF_SETTING_FILE_NAME);
+  
   std::vector<std::string> v_sql_req;
   thread_pool tp{8};
-  db_buffer dbf(8);
+  db_buffer dbf(8); //n
 
   boost::asio::ip::tcp::socket *sk{nullptr};
 

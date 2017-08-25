@@ -3,5 +3,8 @@ tinyxml/*.*
 exception*.log
 *.gch*
 settings.xml
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> b05c669d2e986fe361ae6bc2b1b451a69c059218
