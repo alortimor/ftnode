@@ -3,6 +3,9 @@ tinyxml/*.*
 exception*.log
 *.gch*
 settings.xml
+sadiags.xml
+conn.log
+
 <<<<<<< HEAD
 
 

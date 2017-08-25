@@ -43,14 +43,6 @@ void db_executor::exec_begin() {
   }
 }
 
-bool db_executor::is_complete() {
-  execute_completed = true;
-  for (const auto & sg : v_sg) {
-    execute_completed = sg.is_updated();
-    if (!execute_completed) break;
-  }
-  return execute_completed;
-}
 
 void db_executor::commit_rollback(char c) {
   if (c=='c') {
