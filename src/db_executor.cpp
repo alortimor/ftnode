@@ -34,7 +34,7 @@ const std::string db_executor::get_product() const { return dbi.product; }
 
 const std::string db_executor::get_connection_str() const { return dbi.con_str; }
 
-void db_executor::exec_begin(int rq_id) {
+void db_executor::exec_begin() {
   try {
     cmd->Execute();
   }
@@ -43,7 +43,16 @@ void db_executor::exec_begin(int rq_id) {
   }
 }
 
-void db_executor::commit_rollback(char c, int rq_id) {
+bool db_executor::is_complete() {
+  execute_completed = true;
+  for (const auto & sg : v_sg) {
+    execute_completed = sg.is_updated();
+    if (!execute_completed) break;
+  }
+  return execute_completed;
+}
+
+void db_executor::commit_rollback(char c) {
   if (c=='c') {
     con->Commit();
   }
@@ -77,19 +86,16 @@ bool db_executor::make_connection() {
 }
 
 
-void db_executor::execute_sql_grains (int req_id) {
-  // req_id will be used for becnhmarking at some later point
+void db_executor::execute_sql_grains () {
   for ( auto & s : v_sg ) {
     set_statement(s.get_sql());
     try {
       cmd->Execute();
       s.set_db_return_values(cmd->isResultSet(), cmd->RowsAffected() );
-      s.set_update(true);
     }
     catch (SAException &x) {
       excep_log( (const char*)x.ErrText() );
       s.set_db_return_values(false, -1);
-      s.set_update(true);
       break;
     }
 

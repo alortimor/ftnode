@@ -7,6 +7,7 @@
 #include </home/mw/SQLAPI/include/SQLAPI.h>
 #include "db_info.h"
 #include "logger.h"
+#include "sql_grain"
 
 extern logger exception_log;
 
@@ -66,7 +67,7 @@ class db_executor {
 
     bool make_connection();
     void disconnect();
-    void commit_rollback(char, int);
+    void commit_rollback(char);
     void add_sql_grain(int, const std::string);
     void set_statement(const std::string & sql); // used for setting one-off sql statements, i.e. "begin"
     std::string const get_begin_statement() const;
@@ -75,8 +76,10 @@ class db_executor {
     int const db_sql_grain_rows(int) const; // number of rows specific to a statement id
     bool const db_sql_grain_is_result(int) const; // result specific to a statement id
 
-    void exec_begin(int); // the purpose of this is to explicitly execute the begin
-    void execute_sql_grains (int);
+    bool is_complete();
+
+    void exec_begin(); // the purpose of this is to explicitly execute the begin
+    void execute_sql_grains ();
 };
 
 #endif
