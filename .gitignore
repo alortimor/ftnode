@@ -1,1 +1,5 @@
 tinyxml/*.*
+*.o
+exception*.log
+*.gch*
+settings.xml

@@ -6,8 +6,13 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <map>
+#include </home/mw/SQLAPI/include/SQLAPI.h>
 
 class TiXmlNode;
+
+extern std::map<std::string, SAClient_t> db_con_id;
+extern std::map<std::string, SAIsolationLevel_t> db_iso_level;
 
 namespace xmls {
 // constants
@@ -33,8 +38,7 @@ struct ftnode_mw_dbsources_db : public ftnode_mw_dbsources {
     static const std::string PRODUCT;
     static const std::string ID;
     static const std::string CONSTR;
-    static const std::string BEG_SEL_TR;
-    static const std::string BEG_UDI_TR;
+    static const std::string BEG_TR;
     static const std::string ISO_LEV;
 };
 // endpoint
@@ -61,8 +65,7 @@ struct db_source : public setting
 	std::string password;
     std::string host;
     std::string conn_str; // connection string
-    std::string begin_select_tr; // begin select transaction
-    std::string begin_udi_tr; // begin update/delete/insert transaction
+    std::string begin_tr; // begin transaction
     std::string iso_level; // Isolation Level
 };
 
@@ -71,6 +74,8 @@ struct end_point : public setting
     std::string ip;
     int port;
 };
+
+
 
 class xml_settings
 {

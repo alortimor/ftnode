@@ -2,22 +2,52 @@
 #include <utility>
 #include "../headers/db_buffer.h"
 #include "../headers/logger.h"
+#include "../headers/xml_settings.h"
 
-extern logger exception_log;
+extern logger exception_log; // 
+
 
 db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_size}  {
   for (int i{0}; i<buffer_size; i++) {
     request_buffer.emplace(Key{i}, request(i) );
     st.push(i); // free list in the form of a stack
   }
+  //excep_log(std::to_string(xml_db_sources.size()));
+  const auto& xml_db_sources = settings().get(xmls::ftnode_mw::DBSOURCES); // ELEM_DBSOURCES);
+  for(int i{0}; i < xml_db_sources.size(); ++i)
+  {
+      auto xml_db_source = static_cast<xmls::db_source*>(xml_db_sources[i].get());
+      v_dbi.emplace_back( db_info{xml_db_source->id, xml_db_source->product,xml_db_source->conn_str,
+        xml_db_source->user,xml_db_source->password,xml_db_source->begin_tr,
+        xml_db_source->iso_level != "server_specific", 
+        ( xml_db_source->iso_level == "server_specific" ? SA_RepeatableRead : db_iso_level.at(xml_db_source->iso_level) ), 
+        db_con_id.at(xml_db_source->product)} );
+    }
+    
+      /*dbm.insert(std::make_pair(i, db_info{_db_source->product
+                              , _db_source->conn_str
+                              , _db_source->user
+                              , _db_source->password
+                              , _db_source->begin_select_tr
+                              , _db_source->begin_udi_tr
+                              , db_con_id.at(_db_source->product)
+                              , std::make_unique<SAConnection>()
+                              } )  );*/
+   
+  
 
  /* v_dbi.emplace_back( db_info{0,"postgre","10.11.12.6,5432@ft_node","pg","pg","begin transaction read write","begin transaction read only",true,true,SA_RepeatableRead,SA_PostgreSQL_Client} );
   v_dbi.emplace_back( db_info{1,"oracle","//10.11.12.9:1521/ftnode","ordb","ordb","set transaction isolation level serializable", "set transaction isolation level serializable",false,false,SA_Serializable,SA_Oracle_Client} );
   v_dbi.emplace_back( db_info{2,"sqlanywhere","links=tcpip(host=10.11.12.10;port=2638);databasename=ftnode_sa;servername=ftnode_db","sadb","sadb","begin snapshot","begin snapshot",true,false,SA_RepeatableRead,SA_SQLAnywhere_Client} );
 */
-  v_dbi.emplace_back( db_info{0,"postgre","10.11.12.6,5432@ft_node","pg","pg","select 1",true,SA_RepeatableRead,SA_PostgreSQL_Client} );
-  v_dbi.emplace_back( db_info{1,"oracle","//10.11.12.9:1521/ftnode","ordb","ordb","select 1 from dual", true,SA_Serializable,SA_Oracle_Client} );
-  v_dbi.emplace_back( db_info{2,"sqlanywhere","links=tcpip(host=10.11.12.10;port=2638);databasename=ftnode_sa;servername=ftnode_db","sadb","sadb","select 1",false,SA_RepeatableRead,SA_SQLAnywhere_Client} );
+  // original
+   /*v_dbi.emplace_back( db_info{0,"postgre","10.11.12.6,5432@ft_node","pg","pg","select 1",
+    true,SA_RepeatableRead,SA_PostgreSQL_Client} );
+  v_dbi.emplace_back( db_info{1,"oracle","//10.11.12.9:1521/ftnode","ordb","ordb","select 1 from dual", 
+    true,SA_Serializable,SA_Oracle_Client} );
+  v_dbi.emplace_back( db_info{2,"sqlanywhere","links=tcpip(host=10.11.12.10;port=2638);databasename=ftnode_sa;servername=ftnode_db",
+    "sadb","sadb","select 1",false,SA_RepeatableRead,SA_SQLAnywhere_Client} );
+*/
 
 
  // v_dbi.emplace_back( db_info{0,"postgre","10.11.12.11,5432@ft_node","pg","pg","select 1",true,SA_RepeatableRead,SA_PostgreSQL_Client} );
