@@ -3,6 +3,15 @@
 #include "../headers/xml_settings.h"
 #include "../tinyxml/tinyxml.h"
 
+/*static map<int,int> create_map()
+{
+  map<int,int> m;
+  m[1] = 2;
+  m[3] = 4;
+  m[5] = 6;
+  return m;
+}*/
+
 
 std::map<std::string, SAClient_t> db_con_id{
     {"oracle", SA_Oracle_Client},

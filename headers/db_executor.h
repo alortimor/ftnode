@@ -7,18 +7,18 @@
 #include </home/mw/SQLAPI/include/SQLAPI.h>
 #include "db_info.h"
 #include "logger.h"
-#include "sql_grain"
+#include "sql_grain.h"
 
 extern logger exception_log;
 
-struct sql_grain {
+/*struct sql_grain {
   private:
     int  statement_id{0};
     bool is_result {false};
     long rows{0};
     const std::string sql;
     bool updated{false};
-    std::vector<std::string> v_res; // vector of result, only used for holding sql result sets
+    std::vector<std::string> v_res; // vector of result, only used for holding sql result sets.
 
   public:
     sql_grain(int sid, const std::string & statement) noexcept : statement_id{sid},  sql{statement}  { }
@@ -35,7 +35,7 @@ struct sql_grain {
        is_result = is_result_set;
        rows = rows_affected;
     };
-};
+};*/
 
 class db_executor {
   private:
