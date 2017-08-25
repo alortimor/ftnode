@@ -6,7 +6,7 @@ const int sql_grain::get_statement_id() const { return statement_id; };
 
 const bool sql_grain::is_updated() const { return updated; };
 
-const int sql_grain::get_rows() const { return rows; };
+const int sql_grain::get_rows_affected() const { return rows; };
 
 const bool sql_grain::get_is_result() const { return is_result; };
     

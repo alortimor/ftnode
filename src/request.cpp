@@ -98,8 +98,8 @@ void request::verify_request() {
     for ( auto & d2 : v_dg ) {
       if (d1.get_db_id() != d2.get_db_id()) {
         for (int i{0}; i<statement_cnt; ++i) {
-          comparator_pass = (d1.db_sql_grain_rows(i) == d2.db_sql_grain_rows(i))
-                         && (d1.db_sql_grain_is_result(i) == d2.db_sql_grain_is_result(i));
+          comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i))
+                         && (d1.get_is_result(i) == d2.get_is_result(i));
           if (!comparator_pass) break;
         }
       }
@@ -149,6 +149,11 @@ void request::make_connection() {
     if (!d.make_connection()) break;
   }
 }
+
+bool request::is_one_db_executor_complete() {
+  
+}
+
 
 /*
 std::ostream & operator <<(std::ostream & o, const request & rq) {

@@ -73,8 +73,8 @@ class db_executor {
     std::string const get_begin_statement() const;
     std::string const get_connection_str() const;
     std::string const get_product () const; // returns "oracle", "postgre" .. etc
-    int const db_sql_grain_rows(int) const; // number of rows specific to a statement id
-    bool const db_sql_grain_is_result(int) const; // result specific to a statement id
+    int const get_rows_affected(int) const; // number of rows specific to a statement id
+    bool const get_is_result(int) const; // result specific to a statement id
 
     bool is_complete();
 

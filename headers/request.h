@@ -41,6 +41,7 @@ class request {
     void set_connection_info(const db_info &);
     void make_connection();
     void disconnect();
+    bool is_one_db_executor_complete() const;
 
     // friend std::ostream & operator <<(std::ostream & o, const request & rq);
     void process_request(const std::string);
