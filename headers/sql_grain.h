@@ -12,7 +12,7 @@ class sql_grain {
     std::vector<std::string> v_res; // vector of result, only used for holding sql result sets
 
   public:
-    sql_grain(int sid, const std::string & statement) noexcept : statement_id{sid},  sql{statement}  { }
+    sql_grain(int, const std::string & ) noexcept;
     sql_grain() = delete;
 
     const std::string get_sql() const noexcept ;

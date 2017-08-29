@@ -10,22 +10,18 @@
 #include <atomic>
 #include <fstream>
 #include <unordered_map>
-
-#include "concurrentqueue.h"
 #include "MPMCQueue.h"
-//#include "constants.h"
-//#include "globals.h"
 #include "request.h"
 #include "thread_pool.h"
 #include "tcp_request.h"
 
 const std::string ELEM_DBSOURCES_PRODUCT_ORACLE{"oracle"};
 const std::string ELEM_DBSOURCES_PRODUCT_POSTGRES{"postgres"};
+const std::string ELEM_DBSOURCES_PRODUCT_POSTGRES{"sqlanywhere"};
 
 class db_buffer;
 
-class db_service
-{
+class db_service {
 public:
     //db_service(int thread_count);
     //~db_service() {}
@@ -40,19 +36,10 @@ private:
     static std::condition_variable cv_queue_;
     static std::mutex mutex_;
 
-    static std::atomic<int> atomic_req_id;
-
-    moodycamel::ConcurrentQueue<tcp_request> requests_old;
     rigtorp::MPMCQueue<tcp_request> requests_{50};
     std::unordered_map<int, db_info> dbm;
     
     bool stop_process{false};
-    
-    
-  //void set_db_buffer(db_buffer* _db_buffer);    
-  //db_buffer* db_buffer_{nullptr};
-  //thread_pool tp{8};
-  //int tc{0}; // thread count. Used for the thread pool.
 };
 
 

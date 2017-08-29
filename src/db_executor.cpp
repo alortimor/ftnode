@@ -6,7 +6,7 @@ extern logger exception_log;
 
 int const db_executor::get_db_id() const { return db_id; };
 
-db_executor::db_executor(int dbid) : db_id{dbid}, cmd{std::make_unique<SACommand>()}, con{std::make_unique<SAConnection>()} { }
+db_executor::db_executor(int dbid, request& _req) : db_id{dbid}, cmd{std::make_unique<SACommand>()}, con{std::make_unique<SAConnection>()}, req{_req} { }
 
 void db_executor::add_sql_grain(int statement_id, const std::string sql) {
   v_sg.emplace_back( statement_id, sql);
@@ -92,5 +92,6 @@ void db_executor::execute_sql_grains () {
     }
 
   }
+  req.reply_to_client_upon_first_done(db_id);
 }
 

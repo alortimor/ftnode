@@ -14,6 +14,7 @@ extern logger exception_log;
 class db_executor {
   private:
     int db_id;
+    request& req; // used for callback purposes, when the first one finishes
     std::unique_ptr<SACommand> cmd;  // SACommand object associated with db connection (SAConnection)
                                      // both con and cmd have to be wrapped in unique pointers as they cannot be copied or moved
                                      // But with unique ptr wrapping, they can at least be moved and automatically destroyed.
@@ -22,7 +23,7 @@ class db_executor {
     std::vector<sql_grain> v_sg; // this vector should be quicker, since all member functions are defined as noexcept, which means they can not throw exceptions
 
   public:
-    db_executor(int dbid);
+    db_executor(int dbid, request& _req);
     db_executor(db_executor&&) = default;
     db_executor & operator=(const db_executor &) = delete;
 
@@ -47,8 +48,8 @@ class db_executor {
     std::string const get_begin_statement() const;
     std::string const get_connection_str() const;
     std::string const get_product () const; // returns "oracle", "postgre" .. etc
-    int const get_rows_affected(int) const; // number of rows specific to a statement id
-    bool const get_is_result(int) const; // result specific to a statement id
+    int const get_rows_affected(int) const; // number of rows updated/deleted/inserted, specific to a statement id
+    bool const get_is_result(int) const; // does statement have a a select result set ?
 
     void exec_begin(); // the purpose of this is to explicitly execute the begin
     void execute_sql_grains ();

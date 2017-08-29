@@ -1,5 +1,7 @@
 #include "../headers/request.h"
 
+sql_grain::sql_grain(int sid, const std::string & statement) noexcept : statement_id{sid},  sql{statement}  { }
+
 const std::string sql_grain::get_sql() const  noexcept { return sql; };
 
 const int sql_grain::get_statement_id() const  noexcept  { return statement_id; };
