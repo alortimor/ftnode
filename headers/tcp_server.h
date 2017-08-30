@@ -5,7 +5,6 @@
 #include <thread>
 #include <atomic>
 #include <memory>
-#include <iostream>
 #include "tcp_acceptor.h"
 
 using namespace boost;

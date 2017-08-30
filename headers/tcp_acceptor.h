@@ -2,10 +2,8 @@
 #define ACCEPTOR_H
 
 #include <boost/asio.hpp>
-#include <thread>
 #include <atomic>
 #include <memory>
-#include <iostream>
 #include "tcp_service.h"
 
 using namespace boost;

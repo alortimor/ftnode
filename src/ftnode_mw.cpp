@@ -1,8 +1,8 @@
 #include <thread>
-#include "../headers/ftnode_mw.h"
-#include "../headers/db_service.h"
-#include "../headers/globals.h"
-#include "../headers/xml_settings.h"
+#include "ftnode_mw.h"
+#include "db_service.h"
+#include "globals.h"
+#include "xml_settings.h"
 
 void ftnode_mw::start() {
   db_service _db_service; 

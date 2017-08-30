@@ -1,12 +1,9 @@
 #include <algorithm>
 #include <future>
 #include <string>
-#include <iostream>
-#include <thread>
 #include <sstream>
-#include "../headers/request.h"
-#include "../headers/logger.h"
-// #include "../headers/db_executor.h"
+#include "request.h"
+#include "logger.h"
 
 extern logger exception_log;
 
@@ -175,6 +172,7 @@ void request::make_connection() {
   }
 }
 
+// member function of db_executor is defined in request due to the callback (reply_to_client_upon_first_don)
 void db_executor::execute_sql_grains () {
   for ( auto & s : v_sg ) {
     set_statement(s.get_sql());

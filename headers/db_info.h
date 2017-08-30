@@ -1,7 +1,7 @@
 #ifndef DB_INFO_H_
 #define DB_INFO_H_
 
-#include </home/mw/SQLAPI/include/SQLAPI.h>
+#include <SQLAPI.h>
 #include <string>
 
 struct db_info {

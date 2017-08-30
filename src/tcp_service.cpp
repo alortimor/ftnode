@@ -1,5 +1,5 @@
-#include "../headers/tcp_service.h"
-#include "../headers/db_service.h"
+#include "tcp_service.h"
+#include "db_service.h"
 
 tcp_service::tcp_service(std::shared_ptr<asio::ip::tcp::socket> sock, db_service* _db_service) :
     m_sock{sock}, db_service_{_db_service} { }
@@ -16,18 +16,16 @@ void tcp_service::StartHandling() {
     );
 }
 
-void tcp_service::client_response(const std::string& msg)
-{
-    // Initiate asynchronous write operation.
-    std::string msg_suff = msg + "\n"; // needs to have \n at the end - message format
-    asio::async_write(*m_sock.get(),
-        asio::buffer(msg_suff),
-        [this](
-        const boost::system::error_code& ec,
-        std::size_t bytes_transferred)
-        {
-            onResponseSent(ec, bytes_transferred);
-        });
+void tcp_service::client_response(const std::string& msg) {
+  // Initiate asynchronous write operation.
+  std::string msg_suff = msg + "\n"; // needs to have \n at the end - message format
+  asio::async_write(*m_sock.get(),
+      asio::buffer(msg_suff),
+      [this](
+      const boost::system::error_code& ec,
+      std::size_t bytes_transferred) {
+        onResponseSent(ec, bytes_transferred);
+      });
 }
 
 void tcp_service::onRequestReceived(const boost::system::error_code& ec, std::size_t bytes_transferred) {

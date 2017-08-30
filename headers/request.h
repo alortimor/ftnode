@@ -2,7 +2,6 @@
 #define REQUEST_H_
 #include <mutex>
 #include <vector>
-#include <iostream>
 #include <memory>
 #include <boost/asio.hpp>
 #include "db_info.h"

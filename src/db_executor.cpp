@@ -1,7 +1,7 @@
 #include <string>
-#include "../headers/db_executor.h"
-#include "../headers/logger.h"
-#include "../headers/request.h"
+#include "db_executor.h"
+#include "logger.h"
+#include "request.h"
 
 extern logger exception_log;
 

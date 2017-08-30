@@ -1,10 +1,11 @@
 #include <string>
 #include <utility>
-#include "../headers/db_buffer.h"
-#include "../headers/logger.h"
-#include "../headers/xml_settings.h"
+#include "db_buffer.h"
+#include "logger.h"
+#include "xml_settings.h"
 
-extern logger exception_log; // 
+extern logger exception_log;
+
 
 
 db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_size}  {

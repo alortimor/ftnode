@@ -1,7 +1,6 @@
 #include <map>
-#include </home/mw/SQLAPI/include/SQLAPI.h>
-#include "../headers/xml_settings.h"
-#include "../tinyxml/tinyxml.h"
+#include "xml_settings.h"
+#include "tinyxml.h"
 
 std::map<std::string, SAClient_t> create_con_map() {
   std::map<std::string, SAClient_t> m;
@@ -83,9 +82,11 @@ namespace xmls {
   }
 
   TiXmlNode* xml_settings::proc_elem(TiXmlNode* node) {
-    TiXmlNode* ret = nullptr;
+    
     TiXmlElement* elem = node->ToElement();
     const std::string elemValue = elem->Value();
+
+    TiXmlNode* ret = nullptr;
     if(elemValue == xmls::ftnode_mw::DBSOURCES) {
       proc_db_sources(node);
       ret = nullptr;

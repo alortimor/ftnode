@@ -1,4 +1,4 @@
-#include "../headers/thread_pool.h"
+#include "thread_pool.h"
 
 // Constructor
 thread_pool::thread_pool( int pool_size ) : work_ios{std::make_unique<boost::asio::io_service::work>(ios) } {
