@@ -17,7 +17,7 @@
 
 const std::string ELEM_DBSOURCES_PRODUCT_ORACLE{"oracle"};
 const std::string ELEM_DBSOURCES_PRODUCT_POSTGRES{"postgres"};
-const std::string ELEM_DBSOURCES_PRODUCT_POSTGRES{"sqlanywhere"};
+const std::string ELEM_DBSOURCES_PRODUCT_SQLANYWHERE{"sqlanywhere"};
 
 class db_buffer;
 

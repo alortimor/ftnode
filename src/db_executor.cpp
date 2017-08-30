@@ -1,6 +1,7 @@
 #include <string>
 #include "../headers/db_executor.h"
 #include "../headers/logger.h"
+#include "../headers/request.h"
 
 extern logger exception_log;
 
@@ -43,14 +44,12 @@ void db_executor::exec_begin() {
   }
 }
 
+void db_executor::commit() {
+  con->Commit();
+}
 
-void db_executor::commit_rollback(char c) {
-  if (c=='c') {
-    con->Commit();
-  }
-  else if (c=='r') {
-    con->Rollback();
-  }
+void db_executor::rollback() {
+  con->Rollback();
 }
 
 bool db_executor::make_connection() {
@@ -78,20 +77,4 @@ bool db_executor::make_connection() {
 }
 
 
-void db_executor::execute_sql_grains () {
-  for ( auto & s : v_sg ) {
-    set_statement(s.get_sql());
-    try {
-      cmd->Execute();
-      s.set_db_return_values(cmd->isResultSet(), cmd->RowsAffected() );
-    }
-    catch (SAException &x) {
-      excep_log( (const char*)x.ErrText() );
-      s.set_db_return_values(false, -1);
-      break;
-    }
-
-  }
-  req.reply_to_client_upon_first_done(db_id);
-}
 

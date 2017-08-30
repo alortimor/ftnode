@@ -1,4 +1,7 @@
 #include "../headers/tcp_acceptor.h"
+#include "../headers/logger.h"
+
+extern logger exception_log;
 
 tcp_acceptor::tcp_acceptor(asio::io_service&ios, unsigned short port_num, db_service* _db_service) :
   m_ios(ios),
@@ -29,7 +32,7 @@ void tcp_acceptor::onAccept(const boost::system::error_code&ec, std::shared_ptr<
   if (ec == 0)
     (new tcp_service(sock, db_service_))->StartHandling();
   else
-      excep_log("Error code = " + e.code() + ": " + e.what());
+      excep_log("Error code = " + std::to_string(ec.value()) + ": " + ec.message());
       // std::cout<< "Error occured! Error code = "  <<ec.value() << ". Message: " <<ec.message();
 
   if (!m_isStopped.load())

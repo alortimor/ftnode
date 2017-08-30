@@ -17,6 +17,7 @@ class request {
     std::vector<db_executor> v_dg ; // vector of database executors within a request
     static std::mutex mx; // mutex used to synchronise the begins and locks
     static const int db_count; // defines the number of databases to replicate to
+    bool first_done{false};
 
     bool comparator_pass {false};
     bool is_single_select {false};

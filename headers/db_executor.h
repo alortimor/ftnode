@@ -10,20 +10,25 @@
 #include "sql_grain.h"
 
 extern logger exception_log;
+class request;
 
 class db_executor {
   private:
     int db_id;
-    request& req; // used for callback purposes, when the first one finishes
     std::unique_ptr<SACommand> cmd;  // SACommand object associated with db connection (SAConnection)
                                      // both con and cmd have to be wrapped in unique pointers as they cannot be copied or moved
                                      // But with unique ptr wrapping, they can at least be moved and automatically destroyed.
+
     std::unique_ptr<SAConnection> con;
+    request& req; // used for callback purposes, when the first one finishes
+    std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a result set
+
+
     db_info dbi;
     std::vector<sql_grain> v_sg; // this vector should be quicker, since all member functions are defined as noexcept, which means they can not throw exceptions
 
   public:
-    db_executor(int dbid, request& _req);
+    db_executor(int, request& );
     db_executor(db_executor&&) = default;
     db_executor & operator=(const db_executor &) = delete;
 
@@ -42,7 +47,8 @@ class db_executor {
 
     bool make_connection();
     void disconnect();
-    void commit_rollback(char);
+    void rollback();
+    void commit();
     void add_sql_grain(int, const std::string);
     void set_statement(const std::string & sql); // used for setting one-off sql statements, i.e. "begin"
     std::string const get_begin_statement() const;

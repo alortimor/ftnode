@@ -6,6 +6,7 @@
 #include <sstream>
 #include "../headers/request.h"
 #include "../headers/logger.h"
+// #include "../headers/db_executor.h"
 
 extern logger exception_log;
 
@@ -101,14 +102,13 @@ void request::execute_request(int rq_id) {
 
   for (auto & fut : futures)
     fut.get();
-
-  verify_request();
 }
     
 void request::process_request(const std::string str) {
   create_request(str);
   start_request();
   execute_request(req_id);
+  verify_request();
 }
 
 void request::verify_request() {
@@ -140,14 +140,14 @@ void request::commit_request() {
     {
       std::lock_guard<std::mutex> lk(mx);
       for ( auto & d : v_dg )
-        d.commit_rollback('c');
+        d.commit();
     }
   }
   else  {
     {
       std::lock_guard<std::mutex> lk(mx);
       for ( auto & d : v_dg )
-        d.commit_rollback('r');
+        d.rollback();
     }
   }
 }
@@ -175,6 +175,22 @@ void request::make_connection() {
   }
 }
 
+void db_executor::execute_sql_grains () {
+  for ( auto & s : v_sg ) {
+    set_statement(s.get_sql());
+    try {
+      cmd->Execute();
+      s.set_db_return_values(cmd->isResultSet(), cmd->RowsAffected() );
+    }
+    catch (SAException &x) {
+      excep_log( (const char*)x.ErrText() );
+      s.set_db_return_values(false, -1);
+      break;
+    }
+
+  }
+  req.reply_to_client_upon_first_done(db_id);
+}
 
 /*
 std::ostream & operator <<(std::ostream & o, const request & rq) {

@@ -1,6 +1,8 @@
 #include "./headers/ftnode_mw.h"
 #include "./headers/globals.h"
 #include "./headers/logger.h"
+#include "./headers/request.h"
+#include "./headers/db_executor.h"
 
 
 int main() {

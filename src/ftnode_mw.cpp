@@ -38,10 +38,7 @@ void ftnode_mw::start() {
     def_tcp_server_->Stop();
   }
   catch (system::system_error&e) {
-    std::string str;
-    db_service_thread.join();
-    str = "Error code = " + e.code() + ": " + e.what();
-    std::cerr << str;
-    excep_log(str);
+    std::cerr << e.what();
+    excep_log(e.what());
   }
 }
