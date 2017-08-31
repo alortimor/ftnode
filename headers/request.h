@@ -9,8 +9,8 @@
 
 class request {
   private:
-    int db_count{0};
     int req_id{0};
+    int db_count{0};
     bool active {false}; // if the slot is active, then a client has a connection and has sent through a request.
                          // A tcp/ip socket would therefore have been set, and the request is currently in progress
 

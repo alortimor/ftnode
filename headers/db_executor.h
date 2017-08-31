@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include </home/mw/SQLAPI/include/SQLAPI.h>
+#include <SQLAPI.h>
 #include "db_info.h"
 #include "logger.h"
 #include "sql_grain.h"
