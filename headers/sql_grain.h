@@ -1,5 +1,7 @@
 #ifndef SQL_GRAIN_H_
 #define SQL_GRAIN_H_
+#include <string>
+#include <vector>
 
 
 class sql_grain {
