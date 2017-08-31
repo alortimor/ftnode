@@ -6,7 +6,7 @@ class sql_grain {
   private:
     int  statement_id{0};
     bool is_result {false};
-    long rows{0};
+    long rows{0}; // rows affected
     const std::string sql;
     bool updated{false};
     std::vector<std::string> v_res; // vector of result, only used for holding sql result sets

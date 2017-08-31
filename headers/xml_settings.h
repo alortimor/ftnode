@@ -4,6 +4,7 @@
 #define XML_SETTINGS_H_INCLUDED
 
 #include <vector>
+#include <map>
 #include <string>
 #include <memory>
 #include <map>
@@ -40,6 +41,13 @@ namespace xmls {
     static const std::string CONSTR;
     static const std::string BEG_TR;
     static const std::string ISO_LEV;
+    static const std::string PROPERTY;
+  };
+  
+  // db_property
+  struct ftnode_mw_dbsources_db_property : public ftnode_mw_dbsources_db {
+    static const std::string NAME;
+    static const std::string VALUE;
   };
   
   // endpoint
@@ -65,6 +73,7 @@ namespace xmls {
     std::string conn_str; // connection string
     std::string begin_tr; // begin transaction
     std::string iso_level; // Isolation Level
+    std::map<std::string, std::string> properties;
   };
 
   struct end_point : public setting {
@@ -90,6 +99,8 @@ namespace xmls {
       TiXmlNode* proc_elem(TiXmlNode* node);
       void proc_db_sources(TiXmlNode* dbsources);
       void proc_end_point(TiXmlNode* end_point_node);
+      void proc_db_sources_properties(TiXmlNode* dbsources_node, 
+        std::map<std::string, std::string>& properties);
 
       std::vector<std::unique_ptr<setting>> db_sources;
       std::vector<std::unique_ptr<setting>> end_point_;

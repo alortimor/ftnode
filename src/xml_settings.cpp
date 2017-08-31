@@ -23,7 +23,9 @@ const std::map<std::string, SAIsolationLevel_t> db_iso_level = create_iso_level_
 
 namespace xmls {
   const std::string ftnode_mw::DBSOURCES{"dbsources"};
+  
   const std::string ftnode_mw_dbsources::DB{"db"};
+  
   const std::string ftnode_mw_dbsources_db::HOST{"host"};
   const std::string ftnode_mw_dbsources_db::PORT{"port"};
   const std::string ftnode_mw_dbsources_db::PWD{"pwd"};
@@ -34,6 +36,11 @@ namespace xmls {
   const std::string ftnode_mw_dbsources_db::CONSTR{"cstr"};
   const std::string ftnode_mw_dbsources_db::BEG_TR{"beg_tr"};
   const std::string ftnode_mw_dbsources_db::ISO_LEV{"iso_lev"};
+  const std::string ftnode_mw_dbsources_db::PROPERTY{"property"};
+  
+  const std::string ftnode_mw_dbsources_db_property::NAME{"name"};
+  const std::string ftnode_mw_dbsources_db_property::VALUE{"value"};
+  
   const std::string ftnode_mw::ENDPOINT{"endpoint"};
   const std::string ftnode_mw_endpoint::IP{"ip"};
   const std::string ftnode_mw_endpoint::PORT{"port"};
@@ -100,6 +107,27 @@ namespace xmls {
 
     return node;
   }
+  
+  void xml_settings::proc_db_sources_properties(TiXmlNode* dbsources_node, 
+      std::map<std::string, std::string>& properties) {
+    properties.clear();
+    TiXmlNode* child = dbsources_node->IterateChildren(NULL);
+    std::string elemValue;
+    bool error{false};
+    while (child && !error)	{
+      TiXmlElement* elem = child->ToElement();
+      elemValue = elem->Value();
+      error = (elemValue != xmls::ftnode_mw_dbsources_db::PROPERTY);
+      if(!error) {
+        std::string name = elem->Attribute(xmls::ftnode_mw_dbsources_db_property::NAME.c_str());
+        std::string value = elem->Attribute(xmls::ftnode_mw_dbsources_db_property::VALUE.c_str());
+        
+        properties.emplace(name, value);
+
+        child = child->NextSibling();
+      }
+    }
+  }  
 
   void xml_settings::proc_db_sources(TiXmlNode* dbsources_node) {
     TiXmlNode* child = dbsources_node->IterateChildren(NULL);
@@ -122,6 +150,8 @@ namespace xmls {
         source->begin_tr = elem->Attribute(xmls::ftnode_mw_dbsources_db::BEG_TR.c_str());
         source->iso_level = elem->Attribute(xmls::ftnode_mw_dbsources_db::ISO_LEV.c_str());
         elem->Attribute(xmls::ftnode_mw_dbsources_db::ID.c_str(), &(source->id));
+        
+        proc_db_sources_properties(child, source->properties);
 
         db_sources.push_back(std::move(source)); // note: "source" moved
 
