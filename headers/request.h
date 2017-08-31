@@ -9,13 +9,13 @@
 
 class request {
   private:
+    int db_count{0};
     int req_id{0};
     bool active {false}; // if the slot is active, then a client has a connection and has sent through a request.
                          // A tcp/ip socket would therefore have been set, and the request is currently in progress
 
     std::vector<db_executor> v_dg ; // vector of database executors within a request
     static std::mutex mx; // mutex used to synchronise the begins and locks
-    static const int db_count; // defines the number of databases to replicate to
     bool first_done{false};
 
     bool comparator_pass {false};
@@ -35,8 +35,9 @@ class request {
 
   public:
 
-    request(int rq_id);
+    request(int rq_id, int db_cnt);
 
+    void initialize(); // note: this needs to be called always immediately after creating this object 
     const int get_req_id () const { return req_id; };
     const int get_statement_cnt () const { return statement_cnt; };
     bool is_active() { return active ; };

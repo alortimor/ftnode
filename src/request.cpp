@@ -38,11 +38,15 @@ std::string thread_id() {
 }
 
 std::mutex request::mx;
-const int request::db_count{3};
+//const int request::db_count{3};
 
-request::request(int rq_id) : req_id{rq_id} {  // the number of requests is finite (between 100 & 1000) and set at server startup time
-  for (int i{0}; i<db_count; i++)              // therefore initialising the vector of database grains should be quick enough, given that
-    v_dg.emplace_back(i, *this);               // the database count (db_count) will realistically never be more than 3 to 5
+request::request(int rq_id, int db_cnt) : req_id{rq_id}, db_count{db_cnt} {  
+}
+
+void request::initialize() {      
+  v_dg.clear();                   // the number of requests is finite (between 100 & 1000) and set at server startup time
+  for (int i{0}; i<db_count; i++) // therefore initialising the vector of database grains should be quick enough, given that
+    v_dg.emplace_back(i, *this);  // the database count (db_count) will realistically never be more than 3 to 5    
 }
 
 void request::create_request(const std::string msg) {
