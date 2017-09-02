@@ -3,7 +3,15 @@
 #include "./headers/logger.h"
 #include "./headers/request.h"
 #include "./headers/db_executor.h"
-
+#include "./headers/db_info.h"
+#include "./headers/xml_settings.h"
+#include "./headers/db_buffer.h"
+#include "./headers/sql_grain.h"
+#include "./headers/db_service.h"
+#include "./headers/tcp_service.h"
+#include "./headers/tcp_server.h"
+#include "./headers/tcp_request.h"
+#include "./headers/tcp_acceptor.h"
 
 int main() {
   excep_log("main start");

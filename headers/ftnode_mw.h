@@ -6,7 +6,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
-#include "../headers/tcp_server.h"
+#include "tcp_server.h"
 
 class ftnode_mw {
 public:

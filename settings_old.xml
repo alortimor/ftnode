@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<ftnode_mw>
+  <dbsources>
+    <db id="0" product="oracle" name="ftnode" user="ordb" pwd="ordb" port="1521" host="10.11.12.18" cstr= "//10.11.12.18:1521/ftnode"  beg_tr="select 1 from dual" iso_lev="SA_Serializable"/>
+    <db id="1" product="postgres" name="ft_node" user="pg" pwd="pg" port="5432" host="10.11.12.11" cstr= "10.11.12.11,5432@ft_node"  beg_tr="select 1" iso_lev="SA_RepeatableRead"/>
+    <db id="2" product="sqlanywhere" name="ft_node" user="sadb" pwd="sadb" port="49153" host="10.11.12.17" cstr= "links=tcpip(host=10.11.12.17;port=49153);databasename=ftnode_sa;servername=ftnode_sa"  beg_tr="select 1" iso_lev="server_specific"/>
+  </dbsources>
+  <endpoint ip="127.0.0.1" port="3333"/>
+</ftnode_mw>

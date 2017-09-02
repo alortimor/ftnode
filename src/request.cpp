@@ -90,7 +90,7 @@ void request::start_request() {
   {
     std::lock_guard<std::mutex> lk(mx);
     for ( auto & d : v_dg )
-      d.exec_begin();
+      d.exec_sql();
   }
 }
 
@@ -124,8 +124,8 @@ void request::verify_request() {
     for ( auto & d2 : v_dg ) {
       if (d1.get_db_id() != d2.get_db_id()) {
         for (int i{0}; i<statement_cnt; ++i) {
-          comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i))
-                         && (d1.get_is_result(i) == d2.get_is_result(i));
+          comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i)) 
+                          && (d1.get_hash(i) == d2.get_hash(i));
           if (!comparator_pass) break;
         }
       }
@@ -179,10 +179,20 @@ void request::make_connection() {
 // member function of db_executor is defined in request due to the callback (reply_to_client_upon_first_don)
 void db_executor::execute_sql_grains () {
   for ( auto & s : v_sg ) {
-    set_statement(s.get_sql());
     try {
-      cmd->Execute();
-      s.set_db_return_values(cmd->isResultSet(), cmd->RowsAffected() );
+      if (req.is_one_select()) {
+        int sid = s.get_statement_id();
+        std::future<void> hash_result ( std::async([this, sid]() { execute_hash_select(sid);} ));
+        std::future<void> select_result ( std::async([this, sid]() { execute_select(sid);} ));
+
+        hash_result.get();
+        select_result.get();
+      }
+      else {
+        set_statement(s.get_sql());
+        cmd->Execute();
+        s.set_db_return_values(false, cmd->RowsAffected() );
+      }
     }
     catch (SAException &x) {
       excep_log( (const char*)x.ErrText() );

@@ -41,6 +41,7 @@ class request {
     const int get_req_id () const { return req_id; };
     const int get_statement_cnt () const { return statement_cnt; };
     bool is_active() { return active ; };
+    bool is_one_select() { return is_single_select; };
     void set_socket(boost::asio::ip::tcp::socket* );
     void set_active(bool) ;
     void set_connection_info(const db_info &);

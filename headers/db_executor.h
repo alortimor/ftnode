@@ -16,16 +16,38 @@ class db_executor {
   private:
     int db_id;
     std::unique_ptr<SACommand> cmd;  // SACommand object associated with db connection (SAConnection)
-                                     // both con and cmd have to be wrapped in unique pointers as they cannot be copied or moved
+                                     // con and all cmd objects have to be wrapped in unique pointers as they cannot be copied or moved
                                      // But with unique ptr wrapping, they can at least be moved and automatically destroyed.
 
     std::unique_ptr<SAConnection> con;
     request& req; // used for callback purposes, when the first one finishes
-    std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a result set
+    std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a result set, associated with the con_hash connection object.
+    std::unique_ptr<SAConnection> con_hash; // Unfortunately the SQL Anywhere library does not allow for more than a single DML
+                                            // statement to be executed asynchronously. The exception error generated is 42W22.
+                                            // So to get around this problem an additional connection object is required when executing hash 
+                                            // generators for the purposes of the comparator.
+    std::unique_ptr<SACommand> cmd_sel;
+    std::unique_ptr<SAConnection> con_sel;
+    /* 
+        42W22 https://help.sap.com/viewer/00ed8eaa5d9342029c4c48bf1c7fd52d/17.0/en-US/80e0e5946ce21014a971be81ae0ed92d.html
+        The same applies to SYBASE and probably to MS SQL Server as well.
+        42W22 http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc00462.1520/reference/sqlstate19.htm
+
+     In embedded SQL, you attempted to submit a database request while you have another request in progress. 
+     You should either use a separate SQLCA and connection for each thread accessing the database, or use
+     thread synchronization calls to ensure that a SQLCA is only accessed by one thread at a time. 
+    */
 
 
     db_info dbi;
     std::vector<sql_grain> v_sg; // this vector should be quicker, since all member functions are defined as noexcept, which means they can not throw exceptions
+
+    // used to generate the string to hash within the DB Server.
+    std::string generate_concat_columns(const std::string &);
+    
+    void set_sql_hash_statement(const std::string &); // performed prior to execute_hash_select()
+    void execute_hash_select(int); // executes asynchronously alongside execute_select()
+    void execute_select (int); // based on statement_id (passed in), which is set in sql_grain
 
   public:
     db_executor(int, request& );
@@ -50,15 +72,20 @@ class db_executor {
     void rollback();
     void commit();
     void add_sql_grain(int, const std::string);
-    void set_statement(const std::string & sql); // used for setting one-off sql statements, i.e. "begin"
     std::string const get_begin_statement() const;
     std::string const get_connection_str() const;
     std::string const get_product () const; // returns "oracle", "postgre" .. etc
     int const get_rows_affected(int) const; // number of rows updated/deleted/inserted, specific to a statement id
+    std::string const get_hash(int) const; // hash value, result of select statement
     bool const get_is_result(int) const; // does statement have a a select result set ?
 
-    void exec_begin(); // the purpose of this is to explicitly execute the begin
-    void execute_sql_grains ();
+    void set_statement(const std::string & sql); // used for setting one-off sql statements, i.e. "begin".
+                                                 // Used in conjunction wth exec_sql().
+
+    void exec_sql(); // the purpose of this is to explicitly execute sql statements not neccessarily submitted by the client
+    void execute_sql_grains (); // execute all sql statement submitted by client serially
+
 };
 
 #endif
+

@@ -4,13 +4,9 @@
 extern logger exception_log;
 
 tcp_acceptor::tcp_acceptor(asio::io_service&ios, unsigned short port_num, db_service* _db_service) :
-  m_ios(ios),
-  m_acceptor(m_ios,
-  asio::ip::tcp::endpoint(
-  asio::ip::address_v4::any(),
-  port_num)),
-  m_isStopped(false),
-  db_service_{_db_service}  {  }
+                   m_ios(ios)
+                  ,m_acceptor(m_ios, asio::ip::tcp::endpoint( asio::ip::address_v4::any(), port_num)),
+  m_isStopped(false), db_service_{_db_service}  {  }
 
 void tcp_acceptor::Start() {
   m_acceptor.listen();
