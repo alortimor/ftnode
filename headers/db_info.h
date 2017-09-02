@@ -19,3 +19,4 @@ struct db_info {
 };
 
 #endif
+

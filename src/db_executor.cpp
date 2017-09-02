@@ -103,7 +103,7 @@ void db_executor::execute_select (int statement_id) {
 // concatenates all columns of a client SELECT into a single column.
 // For a given SELECT statement, in an db_executor, this function is only ever called once.
 std::string db_executor::generate_concat_columns(const std::string & sql) {
-  
+  excep_log(std::string("Before Concat dummy column generate ") + (dbi.properties.at("concat_col_prefix") + sql + dbi.properties.at("concat_col_suffix")) );
   cmd->setCommandText((dbi.properties.at("concat_col_prefix") + sql + dbi.properties.at("concat_col_suffix")).c_str());
 
   try {
@@ -116,6 +116,8 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   std::string concat_str {""};
   std::string fmt {""};
   std::string field_name;
+  
+  excep_log(std::string("After Concat dummy column generate ") + std::to_string(cmd->FieldCount()) );
 
   // using the information related to data types, we can now generated a concatenated string
   // that can be hashed
