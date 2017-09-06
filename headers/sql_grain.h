@@ -12,7 +12,6 @@ class sql_grain {
     bool updated{false};
     std::vector<std::string> v_res; // vector of result, only used for holding sql result sets
     std::string sql_hash{""};           // sql statement that returns  a hash md5 value for an entire result set
-    std::string format_columns;     // formatted columns passed to the hash sql statement
 
   public:
     sql_grain(int, const std::string & ) noexcept;

@@ -11,21 +11,20 @@ using namespace boost;
 class db_service;
 class tcp_acceptor {
 public:
-  tcp_acceptor(asio::io_service&ios, unsigned short port_num, db_service* _db_service);
+  tcp_acceptor(asio::io_service&ios, unsigned short port_num);
   // Start accepting incoming connection requests.
-  void Start();
+  void start();
   // Stop accepting incoming connection requests.
-  void Stop();
+  void stop();
 
 private:
-  void InitAccept();
-  void onAccept(const boost::system::error_code&ec,  std::shared_ptr<asio::ip::tcp::socket> sock);
+  void init_accept();
+  void on_accept(const boost::system::error_code&ec,  std::shared_ptr<asio::ip::tcp::socket> sock);
 
 private:
   asio::io_service& m_ios;
   asio::ip::tcp::acceptor m_acceptor;
-  std::atomic<bool> m_isStopped;
-  db_service* db_service_{nullptr};
+  std::atomic<bool> inactive;
 
 };
 

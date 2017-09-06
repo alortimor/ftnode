@@ -27,7 +27,7 @@ public:
     //~db_service() {}
 
     void operator()();
-    void add_reguest(tcp_request&& _tcp_request);
+    void add_request(tcp_request&& _tcp_request);
     void stop();
 
 protected:

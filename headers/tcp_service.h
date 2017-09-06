@@ -13,27 +13,25 @@ using namespace boost;
 class db_service;
 
 class tcp_service {
-public:
-  tcp_service(std::shared_ptr<asio::ip::tcp::socket> sock, db_service* _db_service);
-  void StartHandling();
 
-  void client_response(const std::string& msg);
+  private:
+    std::shared_ptr<asio::ip::tcp::socket> m_sock;
+    std::string m_response;
+    asio::streambuf m_request;
+    db_service* db_service_{nullptr};
 
-private:
-  void onRequestReceived(const boost::system::error_code& ec, std::size_t bytes_transferred);
+    void on_request_received(const boost::system::error_code& ec, std::size_t bytes_transferred);
+    void on_response_sent(const boost::system::error_code& ec, std::size_t bytes_transferred);
+    // onFinish performs the cleanup.
+    void on_finish();
 
-  void onResponseSent(const boost::system::error_code& ec, std::size_t bytes_transferred);
+    std::string process_request(asio::streambuf& req);
 
-  // onFinish performs the cleanup.
-  void onFinish();
+  public:
+    tcp_service(std::shared_ptr<asio::ip::tcp::socket> sock, db_service* _db_service);
+    void start_handling();
+    void client_response(const std::string& msg);
 
-  std::string ProcessRequest(asio::streambuf& req);
-
-private:
-  std::shared_ptr<asio::ip::tcp::socket> m_sock;
-  std::string m_response;
-  asio::streambuf m_request;
-  db_service* db_service_{nullptr};
 };
 
 #endif // SERVICE_H
