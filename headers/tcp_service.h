@@ -18,6 +18,7 @@ public:
   void StartHandling();
 
   void client_response(const std::string& msg);
+  std::shared_ptr<asio::ip::tcp::socket> m_sock;
 
 private:
   void onRequestReceived(const boost::system::error_code& ec, std::size_t bytes_transferred);
@@ -27,10 +28,12 @@ private:
   // onFinish performs the cleanup.
   void onFinish();
 
-  std::string ProcessRequest(asio::streambuf& req);
+  //std::string ProcessRequest(asio::streambuf& req);
+  std::string ProcessRequest(const std::string& buf_str);
+  std::string req_to_str(asio::streambuf& req);
 
 private:
-  std::shared_ptr<asio::ip::tcp::socket> m_sock;
+  
   std::string m_response;
   asio::streambuf m_request;
   db_service* db_service_{nullptr};

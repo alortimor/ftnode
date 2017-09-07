@@ -3,6 +3,16 @@
 #include "./headers/logger.h"
 #include "./headers/request.h"
 #include "./headers/db_executor.h"
+#include "./headers/xml_settings.h"
+#include "./headers/constants.h"
+#include "./headers/db_buffer.h"
+#include "./headers/db_executor.h"
+#include "./headers/db_service.h"
+#include "./headers/tcp_acceptor.h"
+#include "./headers/tcp_request.h"
+#include "./headers/tcp_server.h"
+#include "./headers/db_service.h"
+#include "./headers/thread_pool.h"
 
 
 int main() {

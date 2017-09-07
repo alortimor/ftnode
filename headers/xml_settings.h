@@ -20,6 +20,8 @@ namespace xmls {
   const std::string DEF_SETTING_FILE_NAME{"settings.xml"};
   // xml file content:
   const std::string SETTING_XML_HOME = "ftnode_mw";
+  
+  
 
   struct ftnode_mw {
     static const std::string DBSOURCES;
@@ -29,7 +31,7 @@ namespace xmls {
   struct ftnode_mw_dbsources : public ftnode_mw {
     static const std::string DB;
   };
-
+  
   struct ftnode_mw_dbsources_db : public ftnode_mw_dbsources {
     static const std::string HOST;
     static const std::string PORT;
@@ -45,6 +47,9 @@ namespace xmls {
   };
   
   // db_property
+  
+ // ftnode::db_src::property::NAME
+  
   struct ftnode_mw_dbsources_db_property : public ftnode_mw_dbsources_db {
     static const std::string NAME;
     static const std::string VALUE;

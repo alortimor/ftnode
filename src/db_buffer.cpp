@@ -21,6 +21,11 @@ db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_si
 
   for(int i{0}; i < db_count; ++i) {
       auto xml_db_source = static_cast<xmls::db_source*>(xml_db_sources[i].get());
+      std::cout << "pr1:" << xml_db_source->properties["hash_prefix"] << std::endl;
+      std::cout << "pr2:" << xml_db_source->properties["hash_mid"] << std::endl;
+      std::cout << "pr3:" << xml_db_source->properties["concat_col_suffix"] << std::endl;
+      std::cout << "pr4:" << xml_db_source->properties["date_fmt_suffix"] << std::endl;
+      
       v_dbi.emplace_back( db_info{xml_db_source->id
                                  ,xml_db_source->product
                                  ,xml_db_source->conn_str
@@ -33,6 +38,7 @@ db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_si
                                       : db_iso_level.at(xml_db_source->iso_level) 
                                   )
                                  ,db_con_id.at(xml_db_source->product)} );
+                            
     }
     
   set_db_info();

@@ -7,6 +7,7 @@ tcp_server::tcp_server(db_service* _db_service) : db_service_{_db_service} {
 void tcp_server::Start(unsigned short port_num, unsigned int thread_pool_size) {
   assert(thread_pool_size > 0);
   // Create and start Acceptor.
+  std::cout << "new tcp_acceptor(m_ios, port_num, db_service_)\n";
   acc.reset(new tcp_acceptor(m_ios, port_num, db_service_));
   acc->Start();
 
