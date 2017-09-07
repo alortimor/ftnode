@@ -14,9 +14,9 @@ class tcp_server {
 public:
   tcp_server(db_service* _db_service);
   // Start the server.
-  void Start(unsigned short port_num, unsigned int thread_pool_size);
+  void start(unsigned short port_num, unsigned int thread_pool_size);
   // Stop the server.
-  void Stop();
+  void stop();
 
 private:
   asio::io_service m_ios;

@@ -18,7 +18,7 @@
 std::condition_variable db_service::cv_queue_;
 std::mutex db_service::mutex_;
 
-void db_service::add_reguest(tcp_request&& _tcp_request) {
+void db_service::add_request(tcp_request&& _tcp_request) {
   requests_.push(std::forward<tcp_request>(_tcp_request));
   cv_queue_.notify_all();
 }
@@ -31,7 +31,7 @@ void db_service::stop() {
 
 void db_service::operator()() {
   thread_pool tp{8};
-  db_buffer dbf(80); // 100
+  db_buffer dbf(20); // 100
 
   db_buffer * dbf_ptr = &dbf;
   request * rq{nullptr};

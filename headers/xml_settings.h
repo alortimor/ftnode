@@ -104,8 +104,7 @@ namespace xmls {
       TiXmlNode* proc_elem(TiXmlNode* node);
       void proc_db_sources(TiXmlNode* dbsources);
       void proc_end_point(TiXmlNode* end_point_node);
-      void proc_db_sources_properties(TiXmlNode* dbsources_node, 
-        std::map<std::string, std::string>& properties);
+      void proc_db_sources_properties(TiXmlNode* dbsources_node, std::map<std::string, std::string>& properties);
 
       std::vector<std::unique_ptr<setting>> db_sources;
       std::vector<std::unique_ptr<setting>> end_point_;

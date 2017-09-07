@@ -2,6 +2,7 @@
 #define DB_INFO_H_
 
 #include <SQLAPI.h>
+#include <map>
 #include <string>
 
 struct db_info {
@@ -14,6 +15,8 @@ struct db_info {
   bool set_isolation;
   SAIsolationLevel_t con_isolation_evel; //isolation levels are either repeatable read or serializable (whichever maps to snapshot isolation behaviour in the respective product)
   SAClient_t con_cl; // type of connection (enum)
+  std::map<std::string, std::string> properties;
 };
 
 #endif
+

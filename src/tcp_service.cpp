@@ -143,7 +143,7 @@ std::string tcp_service::ProcessRequest(const std::string& buf_str) {
   std::cout << "::" << kk << "::\n";
   _tcp_request.sql_statement = buf_str.substr(0, buf_str.size()); //{boost::asio::buffers_begin(bufs), boost::asio::buffers_begin(bufs) + (m_request.size() - 1)};
   _tcp_request.socket_ = m_sock.get();
-  db_service_->add_reguest(std::move(_tcp_request));
+  db_service_->add_request(std::move(_tcp_request));
   // NOTE: _tcp_request moved
 
   return response;

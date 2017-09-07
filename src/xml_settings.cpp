@@ -105,7 +105,7 @@ namespace xmls {
     else
       ret = node;
 
-    return node;
+    return ret; // node
   }
   
   void xml_settings::proc_db_sources_properties(TiXmlNode* dbsources_node, 
