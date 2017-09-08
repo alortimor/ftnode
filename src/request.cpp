@@ -133,6 +133,8 @@ void request::verify_request() {
     }
     if (!comparator_pass) break;
   }
+//excep_log(std::to_string(req_id) + " - request id "+ std::to_string(comparator_pass));
+
   commit_request();
 }
 

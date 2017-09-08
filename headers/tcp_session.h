@@ -12,10 +12,11 @@ using namespace boost;
 
 class db_service;
 
-class tcp_service {
+class tcp_session {
 public:
-  tcp_service(std::shared_ptr<asio::ip::tcp::socket> sock, db_service* _db_service);
-  void StartHandling();
+  tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock, db_service* _db_service);
+  void start();
+  void stop();
 
   void client_response(const std::string& msg);
   std::shared_ptr<asio::ip::tcp::socket> m_sock;
@@ -33,9 +34,10 @@ private:
   std::string req_to_str(asio::streambuf& req);
 
 private:
-  
+  std::string socket_msg; // socket data received minus ending character
   std::string m_response;
   asio::streambuf m_request;
+  int bytes_received;
   db_service* db_service_{nullptr};
 };
 

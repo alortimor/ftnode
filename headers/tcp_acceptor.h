@@ -4,7 +4,7 @@
 #include <boost/asio.hpp>
 #include <atomic>
 #include <memory>
-#include "tcp_service.h"
+#include "tcp_session.h"
 
 using namespace boost;
 
@@ -26,6 +26,8 @@ private:
   asio::ip::tcp::acceptor m_acceptor;
   std::atomic<bool> m_isStopped;
   db_service* db_service_{nullptr};
+  
+  std::unique_ptr<tcp_session> session;
 
 };
 

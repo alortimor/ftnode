@@ -8,10 +8,11 @@
 #include "./headers/db_buffer.h"
 #include "./headers/sql_grain.h"
 #include "./headers/db_service.h"
-#include "./headers/tcp_service.h"
+#include "./headers/tcp_session.h"
 #include "./headers/tcp_server.h"
 #include "./headers/tcp_request.h"
 #include "./headers/tcp_acceptor.h"
+#include "./headers/tcp_msg_consts.h"
 
 
 int main() {
