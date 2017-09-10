@@ -4,6 +4,9 @@
 #include <functional>
 #include <exception>
 #include <condition_variable>
+#include <memory>
+#include <mutex>
+#include <vector>
 #include <stack>
 #include "request.h"
 #include "db_info.h"
@@ -24,29 +27,27 @@ struct KeyHasher {
 using hash_table = std::unordered_map<Key, std::unique_ptr<request>, KeyHasher>;
 
 class db_buffer {
-private:
-  int size;
-  int slots_free;
-  std::mutex mx; // only a single instance of db_buffer therefore does not need to be static
-  hash_table request_buffer;
-  std::stack<int> st;
-  std::vector<db_info> v_dbi;
+  private:
+    int size;
+    int slots_free;
+    std::mutex mx; // only a single instance of db_buffer therefore does not need to be static
+    hash_table request_buffer;
+    std::stack<int> st;
+    std::vector<db_info> v_dbi;
 
-  std::condition_variable cv_stack; // only a single instance of db_buffer therefore does not need to be static
+    std::condition_variable cv_stack; // only a single instance of db_buffer therefore does not need to be static
 
-public:
-  explicit db_buffer(int buffer_size);
-  db_buffer(const db_buffer &) = delete;
-  db_buffer & operator=(const db_buffer &) = delete;
-  ~db_buffer();
+  public:
+    explicit db_buffer(int buffer_size);
+    db_buffer(const db_buffer &) = delete;
+    db_buffer & operator=(const db_buffer &) = delete;
+    ~db_buffer();
 
-  void set_db_info();
-  void make_connections();
-  bool make_inactive (int);
-  auto percent_free() const;
-  int make_active (std::unique_ptr<tcp_session>&& );
-  request * get_request(int);
-
+    void set_db_info();
+    bool make_inactive (int);
+    auto percent_free() const;
+    int make_active (std::unique_ptr<tcp_session>&& );
+    request * get_request(int);
 };
 
 #endif // DB_BUFFER_H
