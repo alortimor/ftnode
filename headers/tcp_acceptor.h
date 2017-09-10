@@ -11,15 +11,15 @@ using namespace boost;
 class db_service;
 class tcp_acceptor {
 public:
-  tcp_acceptor(asio::io_service&ios, unsigned short port_num, db_service* _db_service);
+  tcp_acceptor(asio::io_service& , unsigned short, db_service*);
   // Start accepting incoming connection requests.
-  void Start();
+  void start();
   // Stop accepting incoming connection requests.
-  void Stop();
+  void stop();
 
 private:
-  void InitAccept();
-  void onAccept(const boost::system::error_code&ec,  std::shared_ptr<asio::ip::tcp::socket> sock);
+  void initialise();
+  void add_session_to_buffer(const boost::system::error_code&, std::shared_ptr<asio::ip::tcp::socket>);
 
 private:
   asio::io_service& m_ios;

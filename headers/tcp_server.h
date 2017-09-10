@@ -10,11 +10,12 @@
 using namespace boost;
 
 class db_service;
+
 class tcp_server {
 public:
   tcp_server(db_service* _db_service);
   // Start the server.
-  void start(unsigned short port_num, unsigned int thread_pool_size);
+  void start(unsigned short, unsigned short); //port, thread_pool_size
   // Stop the server.
   void stop();
 

@@ -1,19 +1,16 @@
 #include "tcp_session.h"
-#include "db_service.h"
 #include "tcp_msg_consts.h"
 
 //https://stackoverflow.com/questions/28478278/working-with-boostasiostreambuf
 
-tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock, db_service* _db_service) :
-    m_sock{sock}, db_service_{_db_service} { }
+tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock) : m_sock{sock} { }
 
 void tcp_session::start() {
     asio::async_read_until(*m_sock.get(),
         m_request,
         SOCKET_MSG_END,
         [this](const boost::system::error_code& ec,
-            std::size_t bytes_transferred)
-            {
+            std::size_t bytes_transferred)  {
                 onRequestReceived(ec, bytes_transferred);
             }
     );
@@ -43,57 +40,41 @@ void tcp_session::client_response(const std::string& msg) {
       });
 }
 
-std::string tcp_session::req_to_str(asio::streambuf& req) {
+std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
   boost::asio::streambuf::const_buffers_type bufs = m_request.data();
   std::string buf_str(boost::asio::buffers_begin(bufs),
-      boost::asio::buffers_begin(bufs) + m_request.size() - 1);
-      
+  //boost::asio::buffers_begin(bufs) + bytes_transferred);
+  boost::asio::buffers_begin(bufs) + m_request.size() - 1);
+
   return buf_str;
 }
 
 void tcp_session::onRequestReceived(const boost::system::error_code& ec, std::size_t bytes_transferred) {
   if (ec != 0) {
-    std::cout << "Error code = "  << ec.value() << " : " << ec.message();
+    excep_log("onRequestReceived Error " + std::to_string(ec.value()) + ": " + ec.message());
     onFinish();
     return;
   }
   
-  socket_msg = req_to_str(m_request);
+  socket_msg = req_to_str(bytes_transferred); 
+  q.push(socket_msg);  // push onto queue that is read from request
   
-  std::cout << "TCP msg: " << socket_msg << "size: " << socket_msg.size();
-  {
-    m_response = ProcessRequest(socket_msg);
-
-    std::cout << socket_msg;
-    // Initiate asynchronous write operation.
-    asio::async_write(*m_sock.get(),
-        asio::buffer(m_response),
-        [this](
-        const boost::system::error_code& ec,
-        std::size_t bytes_transferred)
-        {
-            onResponseSent(ec, bytes_transferred);
-        });
-    }
+  onResponseSent(ec, bytes_transferred);
 }
 
 void tcp_session::onResponseSent(const boost::system::error_code& ec, std::size_t bytes_transferred) {
-  static int count = 0;
-  count++;
-  std::cout << "tcp_session::onResponseSent"  << std::endl;
-
-  if (ec != 0)
-    std::cout << "Error code = "  << ec.value() << " : " << ec.message();
+  if (ec != 0) {
+    excep_log("onResponseSent Error " + std::to_string(ec.value()) + ": " + ec.message());
+    onFinish();
+  }
 
   m_request.consume(m_request.size()); // 44
-  if(socket_msg != TCPH_DISCONNECT)
-  {
+  if(socket_msg != TCPH_DISCONNECT) {
     asio::async_read_until(*m_sock.get(),
         m_request,
         SOCKET_MSG_END,
         [this](const boost::system::error_code& ec,
-            std::size_t bytes_transferred)
-            {
+            std::size_t bytes_transferred) {
                 onRequestReceived(ec, bytes_transferred);
             }
     ); 
@@ -103,27 +84,15 @@ void tcp_session::onResponseSent(const boost::system::error_code& ec, std::size_
 }
 
 void tcp_session::onFinish() {
-  std::cout << "tcp_session::onFinish() " << std::endl;
   stop();
 }
 
-std::string tcp_session::ProcessRequest(const std::string& buf_str) {
-  std::string response;
-  
-  if(buf_str == TCPH_DISCONNECT)
-    response = std::string("Disconnecting ...\n");
-  else
-  {
-    response = "<Responding: " + buf_str.substr(0, buf_str.size()-1) + std::string(">\n");
-
-    tcp_request _tcp_request;
-    std::string kk = buf_str.substr(0, buf_str.size());
-    std::cout << "::" << kk << "::\n";
-    _tcp_request.sql_statement = buf_str.substr(0, buf_str.size()); 
-    _tcp_request.socket_ = m_sock.get();
-    db_service_->add_request(std::move(_tcp_request));
-    // NOTE: _tcp_request moved
-  }
-
-  return response;
+std::string tcp_session::get_client_msg() {
+  std::unique_lock<std::mutex> lk(tcp_sess_mx);
+  cv_sess.wait(lk, [this]{return ( !q.empty() ); });
+  std::string q_msg;
+  q_msg = q.front();
+  q.pop();
+  return q_msg;
 }
+

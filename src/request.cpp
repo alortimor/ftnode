@@ -4,6 +4,7 @@
 #include <sstream>
 #include "request.h"
 #include "logger.h"
+#include "tcp_session.h"
 
 extern logger exception_log;
 
@@ -49,7 +50,7 @@ void request::initialize() {
     v_dg.emplace_back(i, *this);  // the database count (db_count) will realistically never be more than 3 to 5    
 }
 
-void request::create_request(const std::string msg) {
+void request::create_request(const std::string & msg) {
   // count of the number of sql statements
   statement_cnt = std::count (msg.begin(), msg.end(), ';');
   is_single_select = (statement_cnt == 1 && msg.substr(0, msg.find(' '))=="select" );
@@ -105,8 +106,12 @@ void request::execute_request(int rq_id) {
     fut.get();
 }
     
-void request::process_request(const std::string str) {
-  create_request(str);
+void request::process_request() {
+  std::unique_lock<std::mutex> tcp_sess_lk(sess_mx);
+  cv_sess.wait(tcp_sess_lk, [this]{return request_completed; });
+  request_completed = false;
+  sql_received = tcp_sess->get_client_msg();
+  create_request(sql_received);
   start_request();
   execute_request(req_id);
   verify_request();
@@ -133,8 +138,6 @@ void request::verify_request() {
     }
     if (!comparator_pass) break;
   }
-//excep_log(std::to_string(req_id) + " - request id "+ std::to_string(comparator_pass));
-
   commit_request();
 }
 
@@ -153,10 +156,17 @@ void request::commit_request() {
         d.rollback();
     }
   }
+  request_completed = true;
 }
 
-void request::set_socket(boost::asio::ip::tcp::socket* sk) {
-  socket = sk;
+void request::set_session(std::unique_ptr<tcp_session>&& sess) {
+  excep_log("Before moving socket in request " + std::to_string(req_id));
+  tcp_sess = std::move(sess);
+  excep_log("Before moving tcp_sess->start() in request " + std::to_string(req_id));
+
+  tcp_sess->start();
+  excep_log("After moving tcp_sess->start() in request " + std::to_string(req_id));
+
 }
 
 void request::disconnect() {

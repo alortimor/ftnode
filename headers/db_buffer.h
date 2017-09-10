@@ -8,42 +8,6 @@
 #include "request.h"
 #include "db_info.h"
 
-/*
-struct empty_stack: std::exception {
-  const char* what() const throw();
-};
-
-template<typename T>
-class threadsafe_stack {
-private:
-  std::stack<T> data;
-  mutable std::mutex m;
-
-public:
-  threadsafe_stack(){}
-  threadsafe_stack(const threadsafe_stack& other) =delete;
-  threadsafe_stack& operator=(const threadsafe_stack&) = delete;
-   
-  void push(T new_value) {
-    std::lock_guard<std::mutex> lock(m);
-    data.push(std::move(new_value));
-  }
-
-  void pop(T& value) {
-    std::lock_guard<std::mutex> lock(m);
-    if(data.empty()) throw empty_stack();
-    value=std::move(data.top());
-    data.pop();
-  }
- 
-  bool empty() const {
-    std::lock_guard<std::mutex> lock(m);
-    return data.empty();
-  }
-
-};
-*/
-
 struct Key {
   int request_id;
   bool operator==(const Key &other) const {  return (request_id == other.request_id);  }
@@ -57,7 +21,7 @@ struct KeyHasher {
   }
 };
 
-using hash_table = std::unordered_map<Key, request, KeyHasher>;
+using hash_table = std::unordered_map<Key, std::unique_ptr<request>, KeyHasher>;
 
 class db_buffer {
 private:
@@ -80,11 +44,9 @@ public:
   void make_connections();
   bool make_inactive (int);
   auto percent_free() const;
-  int make_active (boost::asio::ip::tcp::socket *socket);
+  int make_active (std::unique_ptr<tcp_session>&& );
   request * get_request(int);
 
 };
-
-// void print_buffer_content(db_buffer& buff);
 
 #endif // DB_BUFFER_H
