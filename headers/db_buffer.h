@@ -8,7 +8,7 @@
 #include <mutex>
 #include <vector>
 #include <stack>
-#include "request.h"
+#include "db_adjudicator.h"
 #include "db_info.h"
 
 struct Key {
@@ -24,7 +24,7 @@ struct KeyHasher {
   }
 };
 
-using hash_table = std::unordered_map<Key, std::unique_ptr<request>, KeyHasher>;
+using hash_table = std::unordered_map<Key, std::unique_ptr<db_adjudicator>, KeyHasher>;
 
 class db_buffer {
   private:
@@ -47,7 +47,7 @@ class db_buffer {
     bool make_inactive (int);
     auto percent_free() const;
     int make_active (std::unique_ptr<tcp_session>&& );
-    request * get_request(int);
+    db_adjudicator * get_request(int);
 };
 
 #endif // DB_BUFFER_H

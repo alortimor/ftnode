@@ -5,7 +5,8 @@
 #include <SQLAPI.h> // main SQLAPI++ header
 #include <boost/asio.hpp>
 #include "threadsafe_queue.h"
-#include "request.h"
+#include "tcp_session.h"
+#include "db_info.h"
 #include "thread_pool.h"
 
 const std::string ELEM_DBSOURCES_PRODUCT_ORACLE{"oracle"};

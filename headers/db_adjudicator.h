@@ -9,7 +9,7 @@
 #include "db_info.h"
 #include "db_executor.h"
 
-class request {
+class db_adjudicator {
   private:
     int req_id{0};
     int db_count{0};
@@ -42,7 +42,7 @@ class request {
 
   public:
 
-    request(int rq_id, int db_cnt);
+    db_adjudicator(int rq_id, int db_cnt);
 
     void initialize(); // note: this needs to be called always immediately after creating this object 
     const int get_req_id () const { return req_id; };
@@ -57,7 +57,7 @@ class request {
     bool is_one_db_executor_complete() const;
     void reply_to_client_upon_first_done (int);
 
-    // friend std::ostream & operator <<(std::ostream & o, const request & rq);
+    // friend std::ostream & operator <<(std::ostream & o, const db_adjudicator & rq);
     void process_request();
    // void process_request(const std::string);
 };

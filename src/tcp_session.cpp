@@ -1,5 +1,4 @@
 #include "tcp_session.h"
-#include "tcp_msg_consts.h"
 
 //https://stackoverflow.com/questions/28478278/working-with-boostasiostreambuf
 
@@ -50,7 +49,7 @@ void tcp_session::action_msg_received(const boost::system::error_code& ec, std::
   }
   
   socket_msg = req_to_str(bytes_transferred); 
-  q.push(socket_msg);  // push onto queue that is read from request
+  q.push(socket_msg);  // push onto queue that is read from db_adjudicator
   
   read_handler(ec, bytes_transferred); // continue reading
 }
@@ -79,7 +78,7 @@ void tcp_session::stop_session() {
   stop();
 }
 
-// this is called from request class, once the request has been activated
+// this is called from db_adjudicator class, once the request has been activated
 // and is continually read until the request has been finalised.
 std::string tcp_session::get_client_msg() {
   std::unique_lock<std::mutex> lk(tcp_sess_mx);

@@ -7,7 +7,7 @@
 #include "thread_pool.h"
 #include "threadsafe_queue.h"
 #include "tcp_session.h"
-#include "request.h"
+#include "db_adjudicator.h"
 #include "db_buffer.h"
 #include "logger.h"
 #include "xml_settings.h"
@@ -28,7 +28,7 @@ void db_service::operator()() {
   db_buffer dbf(10); // 100
 
   db_buffer * dbf_ptr = &dbf;
-  request * rq{nullptr};
+  db_adjudicator * rq{nullptr};
 
   do {
     auto tcp_sess = tcp_sess_q.pop_unique();

@@ -2,7 +2,7 @@
 #include <future>
 #include <string>
 #include <sstream>
-#include "request.h"
+#include "db_adjudicator.h"
 #include "logger.h"
 #include "tcp_session.h"
 
@@ -38,19 +38,17 @@ std::string thread_id() {
   return s.str();;
 }
 
-std::mutex request::mx;
-//const int request::db_count{3};
+std::mutex db_adjudicator::mx;
 
-request::request(int rq_id, int db_cnt) : req_id{rq_id}, db_count{db_cnt} {  
-}
+db_adjudicator::db_adjudicator(int rq_id, int db_cnt) : req_id{rq_id}, db_count{db_cnt} { }
 
-void request::initialize() {      
+void db_adjudicator::initialize() {      
   v_dg.clear();                   // the number of requests is finite (between 100 & 1000) and set at server startup time
   for (int i{0}; i<db_count; i++) // therefore initialising the vector of database grains should be quick enough, given that
     v_dg.emplace_back(i, *this);  // the database count (db_count) will realistically never be more than 3 to 5    
 }
 
-void request::create_request(const std::string & msg) {
+void db_adjudicator::create_request(const std::string & msg) {
   // count of the number of sql statements
   statement_cnt = std::count (msg.begin(), msg.end(), ';');
   is_single_select = (statement_cnt == 1 && msg.substr(0, msg.find(' '))=="select" );
@@ -71,7 +69,7 @@ void request::create_request(const std::string & msg) {
 // this member communicates back to the client when at least one of
 // the db executors has completed.
 // It is invoked based on a callback from the first db executor that completes
-void request::reply_to_client_upon_first_done (int db_id) {
+void db_adjudicator::reply_to_client_upon_first_done (int db_id) {
   std::lock_guard<std::mutex> lk(mx);
   if(!first_done)  {
     first_done = true;
@@ -79,9 +77,9 @@ void request::reply_to_client_upon_first_done (int db_id) {
   }  
 }
 
-void request::set_active(bool current_active) { active = current_active; };
+void db_adjudicator::set_active(bool current_active) { active = current_active; };
 
-void request::start_request() {
+void db_adjudicator::start_request() {
   // Set BEGIN transaction statement.
   for ( auto & d : v_dg )
     d.set_statement(d.get_begin_statement());
@@ -94,7 +92,7 @@ void request::start_request() {
   }
 }
 
-void request::execute_request(int rq_id) {
+void db_adjudicator::execute_request(int rq_id) {
   // execute database grains asynchronously
   std::vector<std::future<void>> futures;
 
@@ -105,7 +103,7 @@ void request::execute_request(int rq_id) {
     fut.get();
 }
     
-void request::process_request() {
+void db_adjudicator::process_request() {
   std::unique_lock<std::mutex> tcp_sess_lk(sess_mx);
   cv_sess.wait(tcp_sess_lk, [this]{return request_completed; });
   request_completed = false;
@@ -116,7 +114,7 @@ void request::process_request() {
   verify_request();
 }
 
-void request::verify_request() {
+void db_adjudicator::verify_request() {
   comparator_pass=true;
 
   if (db_count == 1) {
@@ -140,7 +138,7 @@ void request::verify_request() {
   commit_request();
 }
 
-void request::commit_request() {
+void db_adjudicator::commit_request() {
   if (comparator_pass) {
     {
       std::lock_guard<std::mutex> lk(mx);
@@ -158,17 +156,17 @@ void request::commit_request() {
   request_completed = true;
 }
 
-void request::set_session(std::unique_ptr<tcp_session>&& sess) {
+void db_adjudicator::set_session(std::unique_ptr<tcp_session>&& sess) {
   tcp_sess = std::move(sess);
   tcp_sess->start();
 }
 
-void request::disconnect() {
+void db_adjudicator::disconnect() {
   for ( auto & d : v_dg )
     d.disconnect();
 }
 
-void request::set_connection_info(const db_info & dbi) {
+void db_adjudicator::set_connection_info(const db_info & dbi) {
   for ( auto & d : v_dg ) {
     if (d.get_db_id() == dbi.db_id )  {
       d.set_connection_info(dbi);
@@ -176,7 +174,7 @@ void request::set_connection_info(const db_info & dbi) {
   }
 }
 
-void request::make_connection() {
+void db_adjudicator::make_connection() {
   for ( auto & d : v_dg ) {
     if (!d.make_connection()) break;
   }
@@ -210,19 +208,3 @@ void db_executor::execute_sql_grains () {
   req.reply_to_client_upon_first_done(db_id);
 }
 
-/*
-std::ostream & operator <<(std::ostream & o, const request & rq) {
-  if (rq.statement_cnt > 0) {
-    for ( const auto & d : rq.v_dg  ) {
-      o << " Request ID : " << rq.req_id 
-        << " Database ID : " << d->db_id;
-      for ( const auto & s : d->s_vg) {
-        o << " Statement ID : " << s->get_statement_id()
-         << " SQL : " << s->get_sql() << "\n";
-      }
-    }
-  }
-  
-  return  o;
-}
-*/

@@ -9,6 +9,7 @@
 #include <memory>
 #include <queue>
 #include <iostream>
+#include "constants.h"
 #include "logger.h"
 
 using namespace boost;

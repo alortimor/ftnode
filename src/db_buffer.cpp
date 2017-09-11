@@ -2,7 +2,7 @@
 #include <utility>
 #include "db_buffer.h"
 #include "logger.h"
-#include "request.h"
+#include "db_adjudicator.h"
 #include "xml_settings.h"
 
 extern logger exception_log;
@@ -14,7 +14,7 @@ db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_si
 
   excep_log( "After reading xml file - DB Count " + std::to_string(db_count) );
   for (int i{0}; i<buffer_size; i++) {
-    auto elem = request_buffer.emplace(Key{i}, std::make_unique<request>(i, db_count) );
+    auto elem = request_buffer.emplace(Key{i}, std::make_unique<db_adjudicator>(i, db_count) );
     elem.first->second->initialize(); // call immediately after request construction
     st.push(i); // free list in the form of a stack
   }
@@ -49,7 +49,7 @@ auto db_buffer::percent_free() const {
 }
 
 // the return ptr is used in a lambda, to asynchronously process requests
-request * db_buffer::get_request(const int rq_id) { return request_buffer.at({rq_id}).get(); }
+db_adjudicator * db_buffer::get_request(const int rq_id) { return request_buffer.at({rq_id}).get(); }
 
 void db_buffer::set_db_info() {
   for (auto & rq : request_buffer) {

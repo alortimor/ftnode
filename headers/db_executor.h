@@ -10,7 +10,7 @@
 #include "sql_grain.h"
 
 extern logger exception_log;
-class request;
+class db_adjudicator;
 
 class db_executor {
   private:
@@ -20,7 +20,7 @@ class db_executor {
                                      // But with unique ptr wrapping, they can at least be moved and automatically destroyed.
 
     std::unique_ptr<SAConnection> con;
-    request& req; // used for callback purposes, when the first one finishes
+    db_adjudicator& req; // used for callback purposes, when the first one finishes
     std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a result set, associated with the con_hash connection object.
     std::unique_ptr<SAConnection> con_hash; // Unfortunately the SQL Anywhere library does not allow for more than a single DML
                                             // statement to be executed asynchronously. The exception error generated is 42W22.
@@ -50,7 +50,7 @@ class db_executor {
     void execute_select (int); // based on statement_id (passed in), which is set in sql_grain
 
   public:
-    db_executor(int, request& );
+    db_executor(int, db_adjudicator& );
     db_executor(db_executor&&) = default;
     db_executor & operator=(const db_executor &) = delete;
 

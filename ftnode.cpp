@@ -1,7 +1,7 @@
 #include "./headers/ftnode_mw.h"
 #include "./headers/globals.h"
 #include "./headers/logger.h"
-#include "./headers/request.h"
+#include "./headers/db_adjudicator.h"
 #include "./headers/db_executor.h"
 #include "./headers/db_info.h"
 #include "./headers/constants.h"

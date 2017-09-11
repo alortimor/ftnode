@@ -9,6 +9,7 @@
 using namespace boost;
 
 class db_service;
+
 class tcp_acceptor {
 public:
   tcp_acceptor(asio::io_service& , unsigned short, db_service*);
