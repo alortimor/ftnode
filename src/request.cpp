@@ -76,7 +76,6 @@ void request::reply_to_client_upon_first_done (int db_id) {
   if(!first_done)  {
     first_done = true;
     excep_log("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
-    // std::cout << "Ready - " << exec_id << std::endl;
   }  
 }
 
@@ -160,13 +159,8 @@ void request::commit_request() {
 }
 
 void request::set_session(std::unique_ptr<tcp_session>&& sess) {
-  excep_log("Before moving socket in request " + std::to_string(req_id));
   tcp_sess = std::move(sess);
-  excep_log("Before moving tcp_sess->start() in request " + std::to_string(req_id));
-
   tcp_sess->start();
-  excep_log("After moving tcp_sess->start() in request " + std::to_string(req_id));
-
 }
 
 void request::disconnect() {

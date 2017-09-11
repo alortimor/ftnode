@@ -22,11 +22,11 @@ public:
   std::string get_client_msg();
 
 private:
-  void onRequestReceived(const boost::system::error_code& ec, std::size_t bytes_transferred);
-  void onResponseSent(const boost::system::error_code& ec, std::size_t bytes_transferred);
+  void action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred);
+  void read_handler(const boost::system::error_code& ec, std::size_t bytes_transferred);
 
   // onFinish performs the cleanup.
-  void onFinish();
+  void stop_session();
 
   //std::string ProcessRequest(const std::string& buf_str);
   std::string req_to_str(std::size_t bytes_transferred);
