@@ -6,7 +6,7 @@ PROJECT_LIBRARY_DIRS :=
 PROJECT_LIBRARIES := ../SQLAPI/lib/libsqlapid.a -lpthread -lboost_system -lboost_thread -DBOOST_THREAD_VERSION=5 -ldl -lpq
 
 CXXFLAGS += $(foreach includedir,$(PROJECT_INCLUDE_DIRS),-I$(includedir))
-CXXFLAGS += -Wall -std=c++14
+CXXFLAGS += -Wall -g -std=c++14
 LDFLAGS += $(foreach librarydir,$(PROJECT_LIBRARY_DIRS),-L$(librarydir))
 LDLIBS += $(foreach library,$(PROJECT_LIBRARIES), $(library))
 
