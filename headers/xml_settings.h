@@ -7,7 +7,6 @@
 #include <map>
 #include <string>
 #include <memory>
-#include <map>
 #include <SQLAPI.h>
 
 class TiXmlNode;

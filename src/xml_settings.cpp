@@ -1,4 +1,3 @@
-#include <map>
 #include "xml_settings.h"
 #include "tinyxml.h"
 

@@ -25,12 +25,13 @@ void ftnode_mw::start() {
   try {
     unsigned int thread_pool_size = std::thread::hardware_concurrency()*2;
     def_tcp_server_->start(port_num, thread_pool_size);
-    
     std::string input_str;
     while(input_str != "q" && input_str != "Q") {
       std::cin >> input_str;
       if(input_str == "q" || input_str == "Q")
+      {
         _db_service.stop();
+      }
       excep_log(input_str);
     }
 

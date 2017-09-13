@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "db_executor.h"
 #include "logger.h"
-#include "request.h"
+#include "db_adjudicator.h"
 
 extern logger exception_log;
 
@@ -12,7 +12,7 @@ static std::string &rtrim(std::string &s) {
   return s;
 }
 
-db_executor::db_executor(int dbid, request& _req) :
+db_executor::db_executor(int dbid, db_adjudicator& _req) :
              db_id{dbid}
            , cmd{std::make_unique<SACommand>()}
            , con{std::make_unique<SAConnection>()}
@@ -208,6 +208,16 @@ bool db_executor::make_connection() {
     cmd->setConnection(con.get());
     cmd_sel->setConnection(con_sel.get());
     cmd_hash->setConnection(con_hash.get());
+    
+    if (dbi.product =="sqlanywhere") {
+      cmd_sel->setCommandText("SET TEMPORARY OPTION isolation_level = 'snapshot'");
+      cmd->setCommandText("SET TEMPORARY OPTION isolation_level = 'snapshot'");
+      cmd_hash->setCommandText("SET TEMPORARY OPTION isolation_level = 'snapshot'");
+      cmd->Execute();
+      cmd_hash->Execute();
+      cmd_sel->Execute();
+    }
+
   }
   catch (SAException &x) { 
     excep_log( "Connection error :" + dbi.product + " - " + std::string((const char*)x.ErrText()) );

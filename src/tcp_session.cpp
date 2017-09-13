@@ -1,22 +1,16 @@
 #include "tcp_session.h"
-#include "db_service.h"
-#include "tcp_msg_consts.h"
 
 //https://stackoverflow.com/questions/28478278/working-with-boostasiostreambuf
 
-tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock, db_service* _db_service) :
-    m_sock{sock}, db_service_{_db_service} { }
+tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock) : m_sock{sock} { }
 
 void tcp_session::start() {
-    asio::async_read_until(*m_sock.get(),
-        m_request,
-        SOCKET_MSG_END,
-        [this](const boost::system::error_code& ec,
-            std::size_t bytes_transferred)
-            {
-                onRequestReceived(ec, bytes_transferred);
-            }
-    );
+  asio::async_read_until(*m_sock.get(), m_request, SOCKET_MSG_END,
+      [this](const boost::system::error_code& ec,
+          std::size_t bytes_transferred)  {
+              action_msg_received(ec, bytes_transferred);
+          }
+  );
 }
 
 void tcp_session::stop() {
@@ -24,106 +18,74 @@ void tcp_session::stop() {
     boost::system::error_code ec;
     m_sock->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
     if(ec != 0)
-      excep_log("tcp_session::stop: Error code = " + std::to_string(ec.value()) + ": " + ec.message());
+      excep_log("Shutdown Error = " + std::to_string(ec.value()) + ": " + ec.message());
   }
   else {
     excep_log("tcp_session::stop: Warning - m_sock is null");
   }
 }
 
-void tcp_session::client_response(const std::string& msg) {
+void tcp_session::client_response(const std::string & msg) {
   // Initiate asynchronous write operation.
-  std::string msg_suff = msg + "\n"; // needs to have \n at the end - message format
+  std::string buf = msg + "\n"; // needs to have \n at the end - message format
   asio::async_write(*m_sock.get(),
-      asio::buffer(msg_suff),
-      [this](
-      const boost::system::error_code& ec,
-      std::size_t bytes_transferred) {
-        onResponseSent(ec, bytes_transferred);
-      });
+      asio::buffer(buf), [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {  /* -- */ });
 }
 
-std::string tcp_session::req_to_str(asio::streambuf& req) {
+std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
   boost::asio::streambuf::const_buffers_type bufs = m_request.data();
   std::string buf_str(boost::asio::buffers_begin(bufs),
-      boost::asio::buffers_begin(bufs) + m_request.size() - 1);
-      
+  //boost::asio::buffers_begin(bufs) + bytes_transferred);
+  boost::asio::buffers_begin(bufs) + m_request.size() - 1);
+
   return buf_str;
 }
 
-void tcp_session::onRequestReceived(const boost::system::error_code& ec, std::size_t bytes_transferred) {
+void tcp_session::action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred) {
   if (ec != 0) {
-    std::cout << "Error code = "  << ec.value() << " : " << ec.message();
-    onFinish();
+    excep_log("Socket Read Error " + std::to_string(ec.value()) + ": " + ec.message());
+    stop_session();
     return;
   }
   
-  socket_msg = req_to_str(m_request);
+  socket_msg = req_to_str(bytes_transferred); 
+  q.push(socket_msg);  // push onto queue that is read from db_adjudicator
   
-  std::cout << "TCP msg: " << socket_msg << "size: " << socket_msg.size();
-  {
-    m_response = ProcessRequest(socket_msg);
-
-    std::cout << socket_msg;
-    // Initiate asynchronous write operation.
-    asio::async_write(*m_sock.get(),
-        asio::buffer(m_response),
-        [this](
-        const boost::system::error_code& ec,
-        std::size_t bytes_transferred)
-        {
-            onResponseSent(ec, bytes_transferred);
-        });
-    }
+  read_handler(ec, bytes_transferred); // continue reading
 }
 
-void tcp_session::onResponseSent(const boost::system::error_code& ec, std::size_t bytes_transferred) {
-  static int count = 0;
-  count++;
-  std::cout << "tcp_session::onResponseSent"  << std::endl;
+void tcp_session::read_handler(const boost::system::error_code& ec, std::size_t bytes_transferred) {
+  if (ec != 0) {
+    excep_log("Socket read Error " + std::to_string(ec.value()) + ": " + ec.message());
+    stop_session();
+  }
 
-  if (ec != 0)
-    std::cout << "Error code = "  << ec.value() << " : " << ec.message();
+  m_request.consume(m_request.size()); // ensure buffer is empty prior to starting to read
 
-  m_request.consume(m_request.size()); // 44
-  if(socket_msg != TCPH_DISCONNECT)
-  {
-    asio::async_read_until(*m_sock.get(),
-        m_request,
-        SOCKET_MSG_END,
+  if(socket_msg != TCPH_DISCONNECT) {
+    asio::async_read_until(*m_sock.get(), m_request, SOCKET_MSG_END,
         [this](const boost::system::error_code& ec,
-            std::size_t bytes_transferred)
-            {
-                onRequestReceived(ec, bytes_transferred);
+            std::size_t bytes_transferred) {
+                action_msg_received(ec, bytes_transferred);
             }
     ); 
   }
   else 
-    onFinish();
+    stop_session();
 }
 
-void tcp_session::onFinish() {
-  std::cout << "tcp_session::onFinish() " << std::endl;
+void tcp_session::stop_session() {
   stop();
 }
 
-std::string tcp_session::ProcessRequest(const std::string& buf_str) {
-  std::string response;
-  
-  if(buf_str == TCPH_DISCONNECT)
-    response = std::string("Disconnecting ...\n");
-  else
-  {
-    response = "<Responding: " + buf_str.substr(0, buf_str.size()-1) + std::string(">\n");
-
-    tcp_request _tcp_request;
-    std::string kk = buf_str.substr(0, buf_str.size());
-    std::cout << "::" << kk << "::\n";
-    _tcp_request.sql_statement = buf_str.substr(0, buf_str.size()); 
-    _tcp_request.socket_ = m_sock.get();
-    db_service_->add_request(std::move(_tcp_request));
-    // NOTE: _tcp_request moved
-  }
-
-  return response;
+// this is called from db_adjudicator class, once the request has been activated
+// and is continually read until the request has been finalised.
+std::string tcp_session::get_client_msg() {
+  std::unique_lock<std::mutex> lk(tcp_sess_mx);
+  cv_sess.wait(lk, [this]{return ( !q.empty() ); });
+  std::string q_msg;
+  q_msg = q.front();
+  q.pop();
+  return q_msg;
 }
+
