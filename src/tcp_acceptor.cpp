@@ -35,6 +35,7 @@ void tcp_acceptor::onAccept(const boost::system::error_code&ec, std::shared_ptr<
     session = std::make_unique<tcp_session>(sock, db_service_);
       // move to db buffer
     session->start(); // make part of make_active
+    std::cout << "After session->start()" << std::endl;
   }
   else
       excep_log("Error code = " + std::to_string(ec.value()) + ": " + ec.message());
