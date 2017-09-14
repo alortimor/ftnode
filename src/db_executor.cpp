@@ -177,9 +177,9 @@ const std::vector<std::pair<char, std::string>> & db_executor::get_sql_results()
 
 void db_executor::prepare_client_results() {
   std::string str;
-  for (const auto & s : v_sg ) {
+  for (const auto & s : v_sg ) {    
     if (!s.get_is_result())
-      v_result.emplace_back(std::make_pair('M', ""));
+      v_result.emplace_back(std::make_pair('M', std::to_string(s.get_rows_affected() )));
     else {
       while(cmd_sel->FetchNext()) {
         str = "";
@@ -191,6 +191,7 @@ void db_executor::prepare_client_results() {
         v_result.emplace_back(std::make_pair('S', str));
       }
     }
+    std::cout << "Results " << v_result.back().first << " " << v_result.back().second << "\n";
   }
 }
 

@@ -8,6 +8,11 @@
 
 extern logger exception_log;
 
+static std::string &rtrim(std::string &s, char c) {
+  s.erase(std::find_if(s.rbegin(), s.rend(), [c](int ch) { return !(ch==c);} ).base(), s.end());
+  return s;
+}
+
 /*
  * Order of processing
  * 1. Create Request - parse string buffer received from tcp/ip server into multiple sql statements
@@ -59,7 +64,7 @@ void db_adjudicator::create_request(const std::string & msg) {
   unsigned short pos{0}; // position of ";" character
   unsigned short start{0}; // start position to initiate search from
 
-  excep_log("Req ID " + std::to_string(req_id) + " statement " + msg + " statement_cnt " + std::to_string(statement_cnt));  
+  // excep_log("Req ID " + std::to_string(req_id) + " statement " + msg + " statement_cnt " + std::to_string(statement_cnt));  
   for (int i{0}; i<statement_cnt; ++i) {
     pos = msg.find(';', start);
     sql_part = msg.substr(start, pos-start);
@@ -77,7 +82,7 @@ bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
   std::lock_guard<std::mutex> lk(mx);
   if(!first_done)  {
     first_done = true;
-    excep_log("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
+   // excep_log("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
     return true;
   }
   else
@@ -97,7 +102,7 @@ void db_adjudicator::start_request() {
     for ( auto & d : v_dg )
       d.exec_sql();
   }
-  excep_log("Req ID " + std::to_string(req_id) + " start completed ");  
+  // excep_log("Req ID " + std::to_string(req_id) + " start completed ");  
 }
 
 void db_adjudicator::execute_request(int rq_id) {
@@ -110,17 +115,16 @@ void db_adjudicator::execute_request(int rq_id) {
   for (auto & fut : futures)
     fut.get();
     
-    excep_log("Req ID " + std::to_string(req_id) + " execute completed ");  
-
 }
 
 void db_adjudicator::process_request() {
   std::string msg;
   unsigned short msg_cnt{0};
-  excep_log("Req ID - " + std::to_string(req_id) + " before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
+  // excep_log("Req ID - " + std::to_string(req_id) + " before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
   while (!db_session_completed) {
     msg = tcp_sess->get_client_msg();
-    excep_log("Req ID " + std::to_string(req_id) + " msg " + msg);
+    rtrim(msg, '\n');
+    // excep_log("Req ID " + std::to_string(req_id) + " msg " + msg);
     if (msg==COMMIT) {
         if (comparator_pass)
           commit_request();
@@ -145,16 +149,12 @@ void db_adjudicator::process_request() {
     }
     else {
         msg_cnt++;
-        excep_log("Req ID " + std::to_string(req_id) + " msg " + msg + " cnt " + std::to_string(msg_cnt));
+        // excep_log("Req ID " + std::to_string(req_id) + " msg " + msg + " cnt " + std::to_string(msg_cnt));
         create_request(msg);
         if ( (msg_cnt==1) || (rolled_back) || (committed) )
           start_request(); // only set snapshot if neccessary
         execute_request(req_id);
-        excep_log("Req ID " + std::to_string(req_id) + " before verify ");  
-
         verify_request();
-        excep_log("Req ID " + std::to_string(req_id) + " after verify " + std::to_string(comparator_pass));  
-
     }
   }
 }
@@ -218,6 +218,10 @@ void db_adjudicator::make_connection() {
 }
 
 void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, std::string>> & v_result) {
+  for (const auto & r : v_result) {
+    // excep_log("Req ID: " + std::to_string(req_id) + std::string(" first ") + r.first + " second " + r.second + "\n");
+  }
+
   for (const auto & r : v_result) {
     tcp_sess->client_response(r.second);
   }

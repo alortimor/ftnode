@@ -40,46 +40,33 @@ void tcp_session::client_response(const std::string & msg) {
 }
 
 std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
-  
   boost::asio::streambuf::const_buffers_type bufs = m_request.data();
   std::string buf_str(boost::asio::buffers_begin(bufs),
   boost::asio::buffers_begin(bufs) + bytes_transferred);
-  // boost::asio::buffers_begin(bufs) + m_request.size() - 1);
-
   return buf_str;
 }
 
 void tcp_session::action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred) {
+
   if (ec != 0) {
-    excep_log("Socket Read Error " + std::to_string(ec.value()) + ": " + ec.message());
     msg_q.push(SOCKET_ERROR);
-   // std::this_thread::sleep_for(std::chrono::seconds(2));
     stop_session();
     return;
   }
-  
   socket_msg = req_to_str(bytes_transferred); 
   msg_q.push(socket_msg);  // push onto queue that is read from db_adjudicator
-  
-  //read_handler(ec, bytes_transferred); // continue reading
+  m_request.consume(bytes_transferred); // ensure buffer is empty prior to starting to read
   read_handler(); // continue reading
 }
 
-//void tcp_session::read_handler(const boost::system::error_code& ec, std::size_t bytes_transferred) {
 void tcp_session::read_handler() {
-  m_request.consume(m_request.size()); // ensure buffer is empty prior to starting to read
-
-  // if(socket_msg != TCPH_DISCONNECT) {
-    asio::async_read_until(*m_sock.get(), m_request, SOCKET_MSG_END,
-        [this](const boost::system::error_code& ec,
-            std::size_t bytes_transferred) {
-                excep_log("Before action message " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );
-                action_msg_received(ec, bytes_transferred);
-            }
-    ); 
-  //}
-  //else 
-  //  stop_session();
+  asio::async_read_until(*m_sock.get(), m_request, '\n',
+      [this](const boost::system::error_code& ec,
+          std::size_t bytes_transferred) {
+              excep_log("Before action " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );
+              action_msg_received(ec, bytes_transferred);
+          }
+  ); 
 }
 
 void tcp_session::stop_session() {
@@ -94,7 +81,7 @@ std::string tcp_session::get_client_msg() {
   std::string msg;
   msg = msg_q.front();
   msg_q.pop();
-  excep_log("TCP_SESSION Queue message read " + msg);
+  // excep_log("TCP_SESSION Queue message read " + msg);
   return msg;
 }
 
