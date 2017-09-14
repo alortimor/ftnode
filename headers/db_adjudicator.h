@@ -18,47 +18,56 @@ class db_adjudicator {
 
     std::vector<db_executor> v_dg ; // vector of database executors within a request
     static std::mutex mx; // mutex used to synchronise the begins and locks
-    bool first_done{false};
+    bool first_done{false}; // boolean which is set once the first executor completes,
+                            // so that communication with the client can proceed
+                            // asynchronously while the other db_executors are still busy
 
-    bool comparator_pass {false};
-    bool is_single_select {false};
     unsigned short statement_cnt{0};
-    bool request_completed {true};
+  
+    // logic booleans
+    bool committed {false};
+    bool is_single_select {false};
+    bool rolled_back {false};
+    bool comparator_pass {false}; // boolean set when all db_executors have completed execution of DML
+                                  // and each result for each DML statement matches
+    bool db_session_completed {false};  // set when a client issues disconnect
+
+    std::queue<std::string> msg_q; // q for seding message to session, which writes the msg to the socket
+    
 
     void create_request(const std::string &); // sql_received
-    void start_request(); // executes "begin" synchronously with a mutex/lock guard
-    void execute_request(int); // executes database executors asynchronously
-    void verify_request(); // equivalent of the comprator
-    void commit_request(); // executes "commit" or "rollback" synchronously with a mutex/lock guard
+
+    void start_request(); // executes "begin" with a mutex/lock guard
+    void execute_request(int); // runs database executors asynchronously
+    void verify_request(); // equivalent of the comparator
+    void commit_request(); // executes "commit" with a mutex/lock guard
                            // based on outcome of verify request as well as client
                            // explicit commit or rollback, once results of the execute_request have
                            // been sucessfully communicated to the client
-    
-    //boost::asio::ip::tcp::socket* socket {nullptr};
+    void rollback_request(); // can be called based on an explicit rollback from the client
+                             // or if the comparator 
+
     std::shared_ptr<tcp_session> tcp_sess;
-    std::string sql_received;
-    std::mutex sess_mx;
-    std::condition_variable cv_sess;
+    std::string sql_received; // from tcp_session
 
   public:
 
     db_adjudicator(int rq_id, int db_cnt);
 
-    void initialize(); // note: this needs to be called always immediately after creating this object 
+    void initialize(); // note: this needs to be called always immediately after creating this object
     const int get_req_id () const { return req_id; };
     const int get_statement_cnt () const { return statement_cnt; };
-    bool is_active() { return active ; };
     bool is_one_select() { return is_single_select; };
+    bool is_active() { return active; };
     void set_session(std::unique_ptr<tcp_session>&& );
     void set_active(bool) ;
     void set_connection_info(const db_info &);
     void make_connection();
     void disconnect();
     bool is_one_db_executor_complete() const;
-    void reply_to_client_upon_first_done (int);
+    bool reply_to_client_upon_first_done (int); //db_id
+    void send_results_to_client(const std::vector<std::pair<char, std::string>> &); // v_results
 
-    // friend std::ostream & operator <<(std::ostream & o, const db_adjudicator & rq);
     void process_request();
-   // void process_request(const std::string);
 };
 #endif

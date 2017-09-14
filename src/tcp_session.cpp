@@ -35,8 +35,8 @@ void tcp_session::client_response(const std::string & msg) {
 std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
   boost::asio::streambuf::const_buffers_type bufs = m_request.data();
   std::string buf_str(boost::asio::buffers_begin(bufs),
-  //boost::asio::buffers_begin(bufs) + bytes_transferred);
-  boost::asio::buffers_begin(bufs) + m_request.size() - 1);
+  boost::asio::buffers_begin(bufs) + bytes_transferred);
+  // boost::asio::buffers_begin(bufs) + m_request.size() - 1);
 
   return buf_str;
 }
@@ -44,21 +44,24 @@ std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
 void tcp_session::action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred) {
   if (ec != 0) {
     excep_log("Socket Read Error " + std::to_string(ec.value()) + ": " + ec.message());
+    msg_q.push(SOCKET_ERROR);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     stop_session();
     return;
   }
   
   socket_msg = req_to_str(bytes_transferred); 
-  q.push(socket_msg);  // push onto queue that is read from db_adjudicator
+  msg_q.push(socket_msg);  // push onto queue that is read from db_adjudicator
   
   read_handler(ec, bytes_transferred); // continue reading
 }
 
 void tcp_session::read_handler(const boost::system::error_code& ec, std::size_t bytes_transferred) {
-  if (ec != 0) {
+/*  if (ec != 0) {
     excep_log("Socket read Error " + std::to_string(ec.value()) + ": " + ec.message());
     stop_session();
   }
+*/
 
   m_request.consume(m_request.size()); // ensure buffer is empty prior to starting to read
 
@@ -82,10 +85,10 @@ void tcp_session::stop_session() {
 // and is continually read until the request has been finalised.
 std::string tcp_session::get_client_msg() {
   std::unique_lock<std::mutex> lk(tcp_sess_mx);
-  cv_sess.wait(lk, [this]{return ( !q.empty() ); });
-  std::string q_msg;
-  q_msg = q.front();
-  q.pop();
-  return q_msg;
+  cv_sess.wait(lk, [this]{return ( !msg_q.empty() ); });
+  std::string msg;
+  msg = msg_q.front();
+  msg_q.pop();
+  return msg;
 }
 
