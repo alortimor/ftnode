@@ -38,7 +38,7 @@ class db_buffer {
     std::condition_variable cv_stack; // only a single instance of db_buffer therefore does not need to be static
 
   public:
-    explicit db_buffer(int buffer_size);
+    explicit db_buffer(int); // size
     db_buffer(const db_buffer &) = delete;
     db_buffer & operator=(const db_buffer &) = delete;
     ~db_buffer();

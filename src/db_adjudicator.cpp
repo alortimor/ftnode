@@ -50,6 +50,8 @@ void db_adjudicator::initialize() {
 
 void db_adjudicator::create_request(const std::string & msg) {
   // count of the number of sql statements
+  committed=false;
+  rolled_back=false;
   statement_cnt = std::count (msg.begin(), msg.end(), ';');
   is_single_select = (statement_cnt == 1 && msg.substr(0, msg.find(' '))=="select" );
 
@@ -57,6 +59,7 @@ void db_adjudicator::create_request(const std::string & msg) {
   unsigned short pos{0}; // position of ";" character
   unsigned short start{0}; // start position to initiate search from
 
+  excep_log("Req ID " + std::to_string(req_id) + " statement " + msg + " statement_cnt " + std::to_string(statement_cnt));  
   for (int i{0}; i<statement_cnt; ++i) {
     pos = msg.find(';', start);
     sql_part = msg.substr(start, pos-start);
@@ -64,17 +67,21 @@ void db_adjudicator::create_request(const std::string & msg) {
     for ( auto & d : v_dg )
       d.add_sql_grain(i, sql_part);
   }
+  
 }
 
 // this member communicates back to the client when at least one of
 // the db executors has completed.
 // It is invoked based on a callback from the first db executor that completes
-void db_adjudicator::reply_to_client_upon_first_done (int db_id) {
+bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
   std::lock_guard<std::mutex> lk(mx);
   if(!first_done)  {
     first_done = true;
     excep_log("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
-  }  
+    return true;
+  }
+  else
+    return false;
 }
 
 void db_adjudicator::set_active(bool current_active) { active = current_active; };
@@ -90,6 +97,7 @@ void db_adjudicator::start_request() {
     for ( auto & d : v_dg )
       d.exec_sql();
   }
+  excep_log("Req ID " + std::to_string(req_id) + " start completed ");  
 }
 
 void db_adjudicator::execute_request(int rq_id) {
@@ -101,26 +109,60 @@ void db_adjudicator::execute_request(int rq_id) {
 
   for (auto & fut : futures)
     fut.get();
-}
     
+    excep_log("Req ID " + std::to_string(req_id) + " execute completed ");  
+
+}
+
 void db_adjudicator::process_request() {
-  std::unique_lock<std::mutex> tcp_sess_lk(sess_mx);
-  cv_sess.wait(tcp_sess_lk, [this]{return request_completed; });
-  request_completed = false;
-  sql_received = tcp_sess->get_client_msg();
-  create_request(sql_received);
-  start_request();
-  execute_request(req_id);
-  verify_request();
+  std::string msg;
+  unsigned short msg_cnt{0};
+  excep_log("Req ID - before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
+  while (!db_session_completed) {
+    msg = tcp_sess->get_client_msg();
+    excep_log("Req ID " + std::to_string(req_id) + " msg " + msg);
+    if (msg==COMMIT) {
+        if (comparator_pass)
+          commit_request();
+        else
+          rollback_request();
+        msg_cnt=0;
+    }
+    else if (msg==ROLLBACK ) {
+        rollback_request();
+        msg_cnt=0;
+    }
+    else if (msg==DISCONNECT ) {
+        if (!committed) rollback_request();
+        tcp_sess->stop();
+        db_session_completed=true;
+        return; // once process_request is complete, db_buffer make_inactive is run
+    }
+    else if (msg==SOCKET_ERROR) {
+        if (!committed) rollback_request();
+        db_session_completed=true;
+        return; // once process_request is complete, db_buffer make_inactive is run
+    }
+    else {
+        msg_cnt++;
+        excep_log("Req ID " + std::to_string(req_id) + " msg " + msg + " cnt " + std::to_string(msg_cnt));
+        create_request(msg);
+        if ( (msg_cnt==1) || (rolled_back) || (committed) )
+          start_request(); // only set snapshot if neccessary
+        execute_request(req_id);
+        excep_log("Req ID " + std::to_string(req_id) + " before verify ");  
+
+        verify_request();
+        excep_log("Req ID " + std::to_string(req_id) + " after verify " + std::to_string(comparator_pass));  
+
+    }
+  }
 }
 
 void db_adjudicator::verify_request() {
   comparator_pass=true;
 
-  if (db_count == 1) {
-    commit_request();
-    return;
-  }
+  if (db_count == 1) { return; }
 
   for ( auto & d1 : v_dg ) {
     for ( auto & d2 : v_dg ) {
@@ -135,25 +177,20 @@ void db_adjudicator::verify_request() {
     }
     if (!comparator_pass) break;
   }
-  commit_request();
 }
 
 void db_adjudicator::commit_request() {
-  if (comparator_pass) {
-    {
-      std::lock_guard<std::mutex> lk(mx);
-      for ( auto & d : v_dg )
-        d.commit();
-    }
-  }
-  else  {
-    {
-      std::lock_guard<std::mutex> lk(mx);
-      for ( auto & d : v_dg )
-        d.rollback();
-    }
-  }
-  request_completed = true;
+  std::lock_guard<std::mutex> lk(mx);
+  for ( auto & d : v_dg )
+    d.commit();
+  committed=true;
+}
+
+void db_adjudicator::rollback_request() {
+  std::lock_guard<std::mutex> lk(mx);
+  for ( auto & d : v_dg )
+    d.rollback();
+  rolled_back=true;
 }
 
 void db_adjudicator::set_session(std::unique_ptr<tcp_session>&& sess) {
@@ -178,6 +215,10 @@ void db_adjudicator::make_connection() {
   for ( auto & d : v_dg ) {
     if (!d.make_connection()) break;
   }
+}
+
+void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, std::string>> & v_result) {
+  // for (const 
 }
 
 // member function of db_executor is defined in request due to the callback (reply_to_client_upon_first_don)
@@ -205,6 +246,12 @@ void db_executor::execute_sql_grains () {
     }
 
   }
-  req.reply_to_client_upon_first_done(db_id);
+  if (req.reply_to_client_upon_first_done(db_id) ) {
+    prepare_client_results();
+    const auto & v_result = get_sql_results();
+    req.send_results_to_client(v_result);
+  }
+    
+    
 }
 

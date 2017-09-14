@@ -38,9 +38,11 @@ class db_executor {
      thread synchronization calls to ensure that a SQLCA is only accessed by one thread at a time. 
     */
 
-
     db_info dbi;
     std::vector<sql_grain> v_sg; // this vector should be quicker, since all member functions are defined as noexcept, which means they can not throw exceptions
+    
+    std::vector<std::pair<char, std::string>> v_result; // vector of result, only used for holding sql result sets
+                                                        // from the first db_executor that completes its SQL
 
     // used to generate the string to hash within the DB Server.
     std::string generate_concat_columns(const std::string &);
@@ -48,6 +50,7 @@ class db_executor {
     void set_sql_hash_statement(const std::string &); // performed prior to execute_hash_select()
     void execute_hash_select(int); // executes asynchronously alongside execute_select()
     void execute_select (int); // based on statement_id (passed in), which is set in sql_grain
+    void prepare_client_results();
 
   public:
     db_executor(int, db_adjudicator& );
@@ -55,6 +58,7 @@ class db_executor {
     db_executor & operator=(const db_executor &) = delete;
 
     int const get_db_id() const;
+    const std::vector<std::pair<char, std::string>> & get_sql_results() const;
     
     /* Sometimes db_info is passed in by value, sometimes by rvalue i.e. db_info{"","",..}, so one can either have overloaded functions
      * or a single universal template */
