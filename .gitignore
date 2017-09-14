@@ -1,4 +1,3 @@
-tinyxml/*.*
 *.o
 log/exception*.log
 *.gch*
