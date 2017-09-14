@@ -117,7 +117,7 @@ void db_adjudicator::execute_request(int rq_id) {
 void db_adjudicator::process_request() {
   std::string msg;
   unsigned short msg_cnt{0};
-  excep_log("Req ID - before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
+  excep_log("Req ID - " + std::to_string(req_id) + " before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
   while (!db_session_completed) {
     msg = tcp_sess->get_client_msg();
     excep_log("Req ID " + std::to_string(req_id) + " msg " + msg);
@@ -218,7 +218,10 @@ void db_adjudicator::make_connection() {
 }
 
 void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, std::string>> & v_result) {
-  // for (const 
+  for (const auto & r : v_result) {
+    tcp_sess->client_response(r.second);
+  }
+  tcp_sess->client_response(CLIENT_MSG_END);
 }
 
 // member function of db_executor is defined in request due to the callback (reply_to_client_upon_first_don)
@@ -251,7 +254,6 @@ void db_executor::execute_sql_grains () {
     const auto & v_result = get_sql_results();
     req.send_results_to_client(v_result);
   }
-    
-    
+  
 }
 

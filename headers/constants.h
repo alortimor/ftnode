@@ -2,8 +2,7 @@
 #define CONSTANTS_H
 
 const char SOCKET_MSG_END{'\n'};
-
-const std::string TCPH_DISCONNECT{"01"};
+const std::string CLIENT_MSG_END{"\n\n"};
 
 const std::string COMMIT{"COMMIT"};
 const std::string ROLLBACK{"ROLLBACK"};

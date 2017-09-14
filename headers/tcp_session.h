@@ -24,7 +24,8 @@ public:
 
 private:
   void action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred);
-  void read_handler(const boost::system::error_code& ec, std::size_t bytes_transferred);
+  //void read_handler(const boost::system::error_code& ec, std::size_t bytes_transferred);
+  void read_handler();
 
   // stop performs the cleanup.
   void stop_session();

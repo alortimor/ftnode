@@ -60,6 +60,7 @@ void db_buffer::set_db_info() {
 }
 
 bool db_buffer::make_inactive (const int req_id) {
+  excep_log( "Before lock guard in db_buffer.make_inactive " + std::to_string(req_id) );
   {
     std::lock_guard<std::mutex> lk(mx);
     st.push(req_id);
