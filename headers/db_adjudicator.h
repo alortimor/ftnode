@@ -23,11 +23,12 @@ class db_adjudicator {
                             // asynchronously while the other db_executors are still busy
 
     unsigned short statement_cnt{0};
-  
+
     // logic booleans
     bool committed {false};
     bool is_single_select {false};
     bool rolled_back {false};
+    bool verify_completed {false};
     bool comparator_pass {false}; // boolean set when all db_executors have completed execution of DML
                                   // and each result for each DML statement matches
     bool db_session_completed {false};  // set when a client issues disconnect
@@ -48,8 +49,6 @@ class db_adjudicator {
                              // or if the comparator 
 
     std::shared_ptr<tcp_session> tcp_sess;
-    std::string sql_received; // from tcp_session
-
   public:
 
     db_adjudicator(int rq_id, int db_cnt);
@@ -59,15 +58,15 @@ class db_adjudicator {
     const int get_statement_cnt () const { return statement_cnt; };
     bool is_one_select() { return is_single_select; };
     bool is_active() { return active; };
-    void set_session(std::unique_ptr<tcp_session>&& );
-    void set_active(bool) ;
+    void set_session(std::unique_ptr<tcp_session>&& ); // sets the private ptr to the tcp_session 
+                                                       // and starts reading from the socket
+    void set_active(bool) ;  // set with a mutex in db_buffer when a slot in the buffer becomes available
     void set_connection_info(const db_info &);
     void make_connection();
     void disconnect();
-    bool is_one_db_executor_complete() const;
     bool reply_to_client_upon_first_done (int); //db_id
-    void send_results_to_client(const std::vector<std::pair<char, std::string>> &); // v_results
+    void send_results_to_client(const std::vector<std::pair<char, std::string>> &); // v_results. is executed if reply_to_client_upon_first_done is true
 
-    void process_request();
+    void process_request(); // called in a lambda (run in a boost thread) in db_service, serves as  entry point for kickstarting a client request
 };
 #endif

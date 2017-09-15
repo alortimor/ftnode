@@ -239,16 +239,6 @@ bool db_executor::make_connection() {
     cmd->setConnection(con.get());
     cmd_sel->setConnection(con_sel.get());
     cmd_hash->setConnection(con_hash.get());
-    
-    if (dbi.product =="sqlanywhere") {
-      cmd_sel->setCommandText("SET TEMPORARY OPTION isolation_level = 'snapshot'");
-      cmd->setCommandText("SET TEMPORARY OPTION isolation_level = 'snapshot'");
-      cmd_hash->setCommandText("SET TEMPORARY OPTION isolation_level = 'snapshot'");
-      cmd->Execute();
-      cmd_hash->Execute();
-      cmd_sel->Execute();
-    }
-
   }
   catch (SAException &x) { 
     excep_log( "Connection error :" + dbi.product + " - " + std::string((const char*)x.ErrText()) );

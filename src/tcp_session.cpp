@@ -6,14 +6,6 @@ tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock) : m_sock{s
 
 void tcp_session::start() {
   read_handler();
-  /*
-  asio::async_read_until(*m_sock.get(), m_request, SOCKET_MSG_END,
-      [this](const boost::system::error_code& ec,
-          std::size_t bytes_transferred)  {
-              action_msg_received(ec, bytes_transferred);
-          }
-  );
-  */
 }
 
 void tcp_session::stop() {
@@ -63,7 +55,7 @@ void tcp_session::read_handler() {
   asio::async_read_until(*m_sock.get(), m_request, '\n',
       [this](const boost::system::error_code& ec,
           std::size_t bytes_transferred) {
-              excep_log("Before action " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );
+              // excep_log("Before action " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );
               action_msg_received(ec, bytes_transferred);
           }
   ); 

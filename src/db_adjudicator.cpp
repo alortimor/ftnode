@@ -120,41 +120,64 @@ void db_adjudicator::execute_request(int rq_id) {
 void db_adjudicator::process_request() {
   std::string msg;
   unsigned short msg_cnt{0};
-  // excep_log("Req ID - " + std::to_string(req_id) + " before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
+  excep_log("Req ID - " + std::to_string(req_id) + " before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
   while (!db_session_completed) {
     msg = tcp_sess->get_client_msg();
     rtrim(msg, '\n');
     // excep_log("Req ID " + std::to_string(req_id) + " msg " + msg);
-    if (msg==COMMIT) {
-        if (comparator_pass)
-          commit_request();
-        else
-          rollback_request();
+    if (msg==COMMIT && verify_completed) {
+        excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) || (!rolled_back) ) { // verify in case user has sent comimt twice
+          excep_log("Req ID COMMIT- " + std::to_string(req_id) + " In COMMIT - comparator " + std::to_string(comparator_pass));
+          if (comparator_pass) {
+            commit_request();
+            tcp_sess->client_response(COMMITED+"\n");
+            excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after commit ");
+            committed=true;
+            rolled_back=false;
+            verify_completed=false;
+            comparator_pass=false;
+          }
+          else {
+            rollback_request();
+            tcp_sess->client_response(ROLLED_BACK + "\n");
+            excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after rollback ");
+            committed=false;
+            rolled_back=true;
+            verify_completed=false;
+            comparator_pass=false;
+          }
+        }
         msg_cnt=0;
     }
     else if (msg==ROLLBACK ) {
-        rollback_request();
+        excep_log("Req ID ROLLBACK - " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) && (!rolled_back) ) rollback_request();
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
-        if (!committed) rollback_request();
-        tcp_sess->stop();
+        excep_log("Req ID DISCONNECT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) && (!rolled_back) ) rollback_request();
+        // tcp_sess->stop();
         db_session_completed=true;
         return; // once process_request is complete, db_buffer make_inactive is run
     }
     else if (msg==SOCKET_ERROR) {
-        if (!committed) rollback_request();
+        excep_log("Req ID SOCKET_ERROR" + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) && (!rolled_back) ) rollback_request();
         db_session_completed=true;
         return; // once process_request is complete, db_buffer make_inactive is run
     }
     else {
         msg_cnt++;
-        // excep_log("Req ID " + std::to_string(req_id) + " msg " + msg + " cnt " + std::to_string(msg_cnt));
+        excep_log("Req ID " + std::to_string(req_id) + " - " + msg + " cnt " + std::to_string(msg_cnt));
         create_request(msg);
         if ( (msg_cnt==1) || (rolled_back) || (committed) )
           start_request(); // only set snapshot if neccessary
         execute_request(req_id);
         verify_request();
+        verify_completed=true;
+        
     }
   }
 }
@@ -162,7 +185,7 @@ void db_adjudicator::process_request() {
 void db_adjudicator::verify_request() {
   comparator_pass=true;
 
-  if (db_count == 1) { return; }
+  if (db_count == 1) return;
 
   for ( auto & d1 : v_dg ) {
     for ( auto & d2 : v_dg ) {
@@ -184,6 +207,7 @@ void db_adjudicator::commit_request() {
   for ( auto & d : v_dg )
     d.commit();
   committed=true;
+  excep_log("Req ID: commit_request " + std::to_string(req_id) + " COMMIT " + std::to_string(committed));
 }
 
 void db_adjudicator::rollback_request() {
@@ -191,6 +215,7 @@ void db_adjudicator::rollback_request() {
   for ( auto & d : v_dg )
     d.rollback();
   rolled_back=true;
+  excep_log("Req ID: rollback_request " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back));
 }
 
 void db_adjudicator::set_session(std::unique_ptr<tcp_session>&& sess) {
