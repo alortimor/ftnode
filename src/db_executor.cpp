@@ -92,10 +92,13 @@ void db_executor::execute_select (int statement_id) {
   try {
     cmd_sel->Execute();
     v_sg.at(statement_id).set_db_return_values(true, 0 );
+    excep_log("DB ID: " + std::to_string(db_id) 
+             + " execute_select " + std::to_string(v_sg.at(statement_id).get_statement_id()) + " " 
+             +   " " + v_sg.at(statement_id).get_sql() + "\n");
   }
   catch (SAException &x) {
     excep_log( "SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) + " :" + v_sg.at(statement_id).get_sql());
-    v_sg.at(statement_id).set_db_return_values(false, -1);
+    v_sg.at(statement_id).set_db_return_values(true, -1);
   }
 }
 
@@ -177,7 +180,10 @@ const std::vector<std::pair<char, std::string>> & db_executor::get_sql_results()
 
 void db_executor::prepare_client_results() {
   std::string str;
-  for (const auto & s : v_sg ) {    
+  for (const auto & s : v_sg ) {
+    excep_log("DB ID: " + std::to_string(db_id) 
+             + " sid " + std::to_string(s.get_statement_id()) + " " 
+             +   " " + std::to_string(s.get_is_result())+ s.get_sql() + "\n");
     if (!s.get_is_result())
       v_result.emplace_back(std::make_pair('M', std::to_string(s.get_rows_affected() )));
     else {

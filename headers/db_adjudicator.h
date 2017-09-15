@@ -26,7 +26,6 @@ class db_adjudicator {
 
     // logic booleans
     bool committed {false};
-    bool is_single_select {false};
     bool rolled_back {false};
     bool verify_completed {false};
     bool comparator_pass {false}; // boolean set when all db_executors have completed execution of DML
@@ -34,7 +33,6 @@ class db_adjudicator {
     bool db_session_completed {false};  // set when a client issues disconnect
 
     std::queue<std::string> msg_q; // q for seding message to session, which writes the msg to the socket
-    
 
     void create_request(const std::string &); // sql_received
 
@@ -56,7 +54,6 @@ class db_adjudicator {
     void initialize(); // note: this needs to be called always immediately after creating this object
     const int get_req_id () const { return req_id; };
     const int get_statement_cnt () const { return statement_cnt; };
-    bool is_one_select() { return is_single_select; };
     bool is_active() { return active; };
     void set_session(std::unique_ptr<tcp_session>&& ); // sets the private ptr to the tcp_session 
                                                        // and starts reading from the socket

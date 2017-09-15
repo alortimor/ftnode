@@ -1,12 +1,26 @@
 #include "sql_grain.h"
+#include "logger.h"
 
-sql_grain::sql_grain(int sid, const std::string & statement) noexcept : statement_id{sid},  sql{statement}  { }
+extern logger exception_log;
+
+
+sql_grain::sql_grain(int sid, const std::string & statement) noexcept : statement_id{sid},  sql{statement}  { 
+  
+  excep_log("SID: " + std::to_string(statement_id)  + statement + " find result|" + statement.substr(0, statement.find(" ")) + "\n");
+
+  is_select_sql = ( statement.substr(0, statement.find(" "))=="select" );
+  
+  excep_log("SID: " + std::to_string(statement_id)  + " " + std::to_string(is_select_sql) +"\n");
+             
+}
 
 const std::string sql_grain::get_sql() const  noexcept { return sql; };
 
 const int sql_grain::get_statement_id() const  noexcept  { return statement_id; };
 
 const bool sql_grain::is_updated() const  noexcept  { return updated; };
+
+const bool sql_grain::is_select() const  noexcept  { return is_select_sql; };
 
 const int sql_grain::get_rows_affected() const  noexcept  { return rows; };
 
