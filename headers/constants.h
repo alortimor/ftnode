@@ -9,6 +9,7 @@ const std::string COMMITED{"COMMITED"};
 const std::string ROLLBACK{"ROLLBACK"};
 const std::string ROLLED_BACK{"ROLLED_BACK"};
 const std::string DISCONNECT{"DISCONNECT"};
+const std::string DISCONNECTED{"DISCONNECTED"};
 const std::string SOCKET_ERROR{"SOCKET_ERROR"};
 
 

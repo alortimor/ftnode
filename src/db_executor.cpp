@@ -160,14 +160,16 @@ void db_executor::prepare_client_results() {
       v_result.emplace_back(std::make_pair('M', std::to_string(s.get_rows_affected() )));
     else {
       excep_log("DB ID : " + std::to_string(db_id) + " sid " + std::to_string(s.get_statement_id())+ " get_is_result - before fetch");
-      while(cmd->FetchNext()) {
-        str = "";
-        for (int i{1}; i <= cmd->FieldCount(); i++) {
-          str += cmd->Field(i).asString();
-          str += ",";
+      if (cmd->isOpened()) { // checks 
+        while(cmd->FetchNext()) {
+          str = "";
+          for (int i{1}; i <= cmd->FieldCount(); i++) {
+            str += cmd->Field(i).asString();
+            str += ",";
+          }
+          rtrim(str, ',');
+          v_result.emplace_back(std::make_pair('S', str));
         }
-        rtrim(str, ',');
-        v_result.emplace_back(std::make_pair('S', str));
       }
     }
     std::cout << "Results " << v_result.back().first << " " << v_result.back().second << "\n";
