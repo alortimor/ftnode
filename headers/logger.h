@@ -87,9 +87,9 @@ class logger {
 class log_file_path {
 private:
   friend void excep_log_(const std::string & msg);
-  friend void excep_log_2(const std::string & msg);
-  friend void excep_log_3(const std::string & msg);
-  friend void excep_log_4(const std::string & msg);
+  friend void excep_log_2_(const std::string & msg);
+  friend void excep_log_3_(const std::string & msg);
+  friend void excep_log_4_(const std::string & msg);
   
   friend void set_log1_file_path_(const std::string & path_, const std::string & file_name_);
   friend void set_log2_file_path_(const std::string & path_, const std::string & file_name_);
@@ -143,7 +143,7 @@ inline void excep_log_(const std::string & msg)
 	exception_log->write(msg);
 }
 
-inline void excep_log_2(const std::string & msg)
+inline void excep_log_2_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log;
   static std::string cur_path;
@@ -157,7 +157,7 @@ inline void excep_log_2(const std::string & msg)
 	exception_log->write(msg);
 }
 
-inline void excep_log_3(const std::string & msg)
+inline void excep_log_3_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log;
   static std::string cur_path;
@@ -171,7 +171,7 @@ inline void excep_log_3(const std::string & msg)
 	exception_log->write(msg);
 }
 
-inline void excep_log_4(const std::string & msg)
+inline void excep_log_4_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log;
   static std::string cur_path;
@@ -185,21 +185,10 @@ inline void excep_log_4(const std::string & msg)
 	exception_log->write(msg);
 }
 
-template<int T>
-inline void test_log2(const std::string & msg, const std::string & path="", const std::string & file_name="")
-{
-  static std::unique_ptr<logger> exception_log = 
-    std::make_unique<logger>(std::make_unique<threadsafe_log>("log", std::to_string(T)));
-  if(!path.empty() || !file_name.empty())
-    exception_log = std::make_unique<logger>(std::make_unique<threadsafe_log>(path, file_name));
-    
-	exception_log->write(msg);
-}
-
 #define excep_log(x) excep_log_(x)
-#define excep_log_2(x) excep_log_2(x)
-#define excep_log_3(x) excep_log_3(x)
-#define excep_log_4(x) excep_log_4(x)
+#define excep_log_2(x) excep_log_2_(x)
+#define excep_log_3(x) excep_log_3_(x)
+#define excep_log_4(x) excep_log_4_(x)
 
 #define set_log1_file_path(x, y)  set_log1_file_path_(x, y)
 #define set_log2_file_path(x, y)  set_log2_file_path_(x, y)
