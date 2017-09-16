@@ -134,6 +134,8 @@ inline int excep_log_(const std::string & msg)
   static std::string cur_file_name;
   // if file path is changed create a new exception_log
   if(cur_path != log1_file_path.path || cur_file_name != log1_file_path.file_name) {
+    cur_path = log1_file_path.path;
+    cur_file_name = log1_file_path.file_name;
     exception_log = std::make_unique<logger>(
       std::make_unique<threadsafe_log>(log1_file_path.path, log1_file_path.file_name));
   }
@@ -149,6 +151,8 @@ inline int excep_log_2_(const std::string & msg)
   static std::string cur_file_name;
   // if file path is changed create a new exception_log
   if(cur_path != log2_file_path.path || cur_file_name != log2_file_path.file_name) {
+    cur_path = log2_file_path.path;
+    cur_file_name = log2_file_path.file_name;    
     exception_log = std::make_unique<logger>(
       std::make_unique<threadsafe_log>(log2_file_path.path, log2_file_path.file_name));
   }
@@ -164,6 +168,8 @@ inline int excep_log_3_(const std::string & msg)
   static std::string cur_file_name;
   // if file path is changed create a new exception_log
   if(cur_path != log3_file_path.path || cur_file_name != log3_file_path.file_name) {
+    cur_path = log3_file_path.path;
+    cur_file_name = log3_file_path.file_name;    
     exception_log = std::make_unique<logger>(
       std::make_unique<threadsafe_log>(log3_file_path.path, log3_file_path.file_name));
   }
@@ -179,6 +185,8 @@ inline int excep_log_4_(const std::string & msg)
   static std::string cur_file_name;
   // if file path is changed create a new exception_log
   if(cur_path != log4_file_path.path || cur_file_name != log4_file_path.file_name) {
+    cur_path = log4_file_path.path;
+    cur_file_name = log4_file_path.file_name;    
     exception_log = std::make_unique<logger>(
       std::make_unique<threadsafe_log>(log4_file_path.path, log4_file_path.file_name));
   }
