@@ -25,7 +25,7 @@ void db_service::stop() {
 
 void db_service::operator()() {
   thread_pool tp{8};
-  db_buffer dbf(10); // 100
+  db_buffer dbf(200); // 100
 
   db_buffer * dbf_ptr = &dbf;
   db_adjudicator * rq{nullptr};

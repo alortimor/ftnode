@@ -20,24 +20,8 @@ class db_executor {
                                      // But with unique ptr wrapping, they can at least be moved and automatically destroyed.
 
     std::unique_ptr<SAConnection> con;
+    std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a result set
     db_adjudicator& req; // used for callback purposes, when the first one finishes
-    std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a result set, associated with the con_hash connection object.
-    std::unique_ptr<SAConnection> con_hash; // Unfortunately the SQL Anywhere library does not allow for more than a single DML
-                                            // statement to be executed asynchronously. The exception error generated is 42W22.
-                                            // So to get around this problem an additional connection object is required when executing hash 
-                                            // generators for the purposes of the comparator.
-    std::unique_ptr<SACommand> cmd_sel;
-    std::unique_ptr<SAConnection> con_sel;
-    /* 
-        42W22 https://help.sap.com/viewer/00ed8eaa5d9342029c4c48bf1c7fd52d/17.0/en-US/80e0e5946ce21014a971be81ae0ed92d.html
-        The same applies to SYBASE and probably to MS SQL Server as well.
-        42W22 http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc00462.1520/reference/sqlstate19.htm
-
-     In embedded SQL, you attempted to submit a database request while you have another request in progress. 
-     You should either use a separate SQLCA and connection for each thread accessing the database, or use
-     thread synchronization calls to ensure that a SQLCA is only accessed by one thread at a time. 
-    */
-
     db_info dbi;
     std::vector<sql_grain> v_sg; // this vector should be quicker, since all member functions are defined as noexcept, which means they can not throw exceptions
     

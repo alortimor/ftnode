@@ -27,19 +27,6 @@
     <property name="date_fmt_prefix" value=" to_char("/>
     <property name="date_fmt_suffix" value=",'yyyymmdd')"/>
   </db>
-  <db id="2" product="sqlanywhere" name="ftnode" user="sadb" pwd="sadb" port="49153" host="10.11.12.17" cstr="links=tcpip(host=10.11.12.17;port=49153);databasename=ftnode_sa;servername=ftnode_sa"  beg_tr="select 1" iso_lev="SA_Serializable">
-    <property name="hash_prefix" value="select hash(list(hash_val,'' order by hash_val),'MD5') as hash_val from (select hash("/>
-    <property name="hash_mid" value=",'MD5') as hash_val from ("/>
-    <property name="hash_suffix" value=") as ht) as ht"/>
-    <property name="number_scale_fmt_prefix" value=" replace ( trim ( replace ( string ("/>
-    <property name="number_scale_fmt_mid" value=""/>
-    <property name="number_scale_fmt_suffix" value="), '0', ' ' ) ), ' ', '0' )"/>
-    <property name="apply_number_format_mask" value="false"/>
-    <property name="concat_col_prefix" value="select * from ("/>
-    <property name="concat_col_suffix" value=") as t where 0=1"/>
-    <property name="date_fmt_prefix" value=" dateformat("/>
-    <property name="date_fmt_suffix" value=",'yyyymmdd')"/>
-  </db>
 </dbsources>
 <endpoint ip="127.0.0.1" port="3333"/>
 </ftnode_mw>

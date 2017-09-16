@@ -1,8 +1,4 @@
 #include "sql_grain.h"
-#include "logger.h"
-
-extern logger exception_log;
-
 
 sql_grain::sql_grain(int sid, const std::string & statement) noexcept : statement_id{sid},  sql{statement}  { 
   is_select_sql = ( statement.substr(0, statement.find(" "))=="select" );

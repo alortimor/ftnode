@@ -255,9 +255,9 @@ void db_adjudicator::make_connection() {
 }
 
 void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, std::string>> & v_result) {
-  for (const auto & r : v_result) {
-    // excep_log("Req ID: " + std::to_string(req_id) + std::string(" first ") + r.first + " second " + r.second + "\n");
-  }
+//  for (const auto & r : v_result) {
+//     excep_log("Req ID: send_results_to_client " + std::to_string(req_id) + std::string(" first ") + r.first + " second " + r.second + "\n");
+//  }
 
   for (const auto & r : v_result) {
     tcp_sess->client_response(r.second);
@@ -276,13 +276,11 @@ void db_executor::execute_sql_grains () {
 
         hash_result.get();
         select_result.get();
-        excep_log("Req ID: " + std::to_string(req.get_req_id()) + " DB ID : " + std::to_string(db_id)  + " executed - sid " + std::to_string(s.get_statement_id()) + " - " + s.get_sql() );
       }
       else {
         set_statement(s.get_sql());
         cmd->Execute();
         s.set_db_return_values(false, cmd->RowsAffected() );
-        excep_log("Req ID: " + std::to_string(req.get_req_id()) + " DB ID : " + std::to_string(db_id) + " executed - sid " + std::to_string(s.get_statement_id()) + " - " + s.get_sql() );
       }
     }
     catch (SAException &x) {
@@ -295,6 +293,7 @@ void db_executor::execute_sql_grains () {
   if (req.reply_to_client_upon_first_done(db_id) ) {
     prepare_client_results();
     const auto & v_result = get_sql_results();
+    excep_log("REQ ID " + std::to_string(req.get_req_id()) + " result size " + std::to_string(v_result.size()) );
     req.send_results_to_client(v_result);
   }
   
