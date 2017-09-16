@@ -8,6 +8,22 @@
 
 extern logger exception_log;
 
+static std::string & ltrim(std::string &s, char c) {
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [c](int ch) { return !(ch==c);} ));
+  return s;
+}
+  
+static std::string & rtrim(std::string &s, char c) {
+  s.erase(std::find_if(s.rbegin(), s.rend(), [c](int ch) { return !(ch==c);} ).base(), s.end());
+  return s;
+}
+
+static std::string & trim(std::string &s, char c) {
+  ltrim(s, c);
+  rtrim(s, c);
+  return s;
+}
+
 /*
  * Order of processing
  * 1. Create Request - parse string buffer received from tcp/ip server into multiple sql statements
@@ -30,13 +46,15 @@ extern logger exception_log;
 *            all communication to the client, based on results of the first db_executor to complete, has been done,
 *            the client may however issue an explicit rollback.
 */
- 
+
+/*
 std::string thread_id() {
   auto id = std::this_thread::get_id();
   std::stringstream s;
   s << id;
   return s.str();;
 }
+*/
 
 std::mutex db_adjudicator::mx;
 
@@ -53,16 +71,15 @@ void db_adjudicator::create_request(const std::string & msg) {
   committed=false;
   rolled_back=false;
   statement_cnt = std::count (msg.begin(), msg.end(), ';');
-  is_single_select = (statement_cnt == 1 && msg.substr(0, msg.find(' '))=="select" );
 
   std::string sql_part; // sql satement
   unsigned short pos{0}; // position of ";" character
   unsigned short start{0}; // start position to initiate search from
 
-  excep_log("Req ID " + std::to_string(req_id) + " statement " + msg + " statement_cnt " + std::to_string(statement_cnt));  
   for (int i{0}; i<statement_cnt; ++i) {
     pos = msg.find(';', start);
     sql_part = msg.substr(start, pos-start);
+    trim(sql_part, ' ');
     start = pos+1;
     for ( auto & d : v_dg )
       d.add_sql_grain(i, sql_part);
@@ -75,9 +92,9 @@ void db_adjudicator::create_request(const std::string & msg) {
 // It is invoked based on a callback from the first db executor that completes
 bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
   std::lock_guard<std::mutex> lk(mx);
-  if(!first_done)  {
+  if (!first_done)  {
     first_done = true;
-    excep_log("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
+   // excep_log("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
     return true;
   }
   else
@@ -97,7 +114,6 @@ void db_adjudicator::start_request() {
     for ( auto & d : v_dg )
       d.exec_sql();
   }
-  excep_log("Req ID " + std::to_string(req_id) + " start completed ");  
 }
 
 void db_adjudicator::execute_request(int rq_id) {
@@ -110,51 +126,68 @@ void db_adjudicator::execute_request(int rq_id) {
   for (auto & fut : futures)
     fut.get();
     
-    excep_log("Req ID " + std::to_string(req_id) + " execute completed ");  
-
 }
 
 void db_adjudicator::process_request() {
   std::string msg;
   unsigned short msg_cnt{0};
-  excep_log("Req ID - before while loop " + std::to_string(db_session_completed) + " db_session_completed ");
   while (!db_session_completed) {
     msg = tcp_sess->get_client_msg();
-    excep_log("Req ID " + std::to_string(req_id) + " msg " + msg);
-    if (msg==COMMIT) {
-        if (comparator_pass)
-          commit_request();
-        else
-          rollback_request();
+    rtrim(msg, '\n');
+    // excep_log("Req ID " + std::to_string(req_id) + " msg " + msg );
+
+    if (msg==COMMIT && verify_completed) {
+        excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
+          excep_log("Req ID COMMIT- " + std::to_string(req_id) + " In COMMIT - comparator " + std::to_string(comparator_pass));
+          if (comparator_pass) {
+            commit_request();
+            tcp_sess->client_response(COMMITED+"\n");
+            excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after commit ");
+            committed=true;
+            rolled_back=false;
+            verify_completed=false;
+            comparator_pass=false;
+          }
+          else {
+            rollback_request();
+            tcp_sess->client_response(ROLLED_BACK + "\n");
+            excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after rollback ");
+            committed=false;
+            rolled_back=true;
+            verify_completed=false;
+            comparator_pass=false;
+          }
+        }
         msg_cnt=0;
     }
     else if (msg==ROLLBACK ) {
-        rollback_request();
+        excep_log("Req ID ROLLBACK - " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) && (!rolled_back) ) rollback_request();
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
-        if (!committed) rollback_request();
-        tcp_sess->stop();
+        excep_log("Req ID DISCONNECT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) && (!rolled_back) ) rollback_request(); // Ensure a rollback occurs for a premature disconnect
+        tcp_sess->client_response(DISCONNECTED + "\n");
         db_session_completed=true;
-        return; // once process_request is complete, db_buffer make_inactive is run
+        return; // once process_request is complete, db_buffer.make_inactive is run, which elegantly cleans memory 
     }
     else if (msg==SOCKET_ERROR) {
-        if (!committed) rollback_request();
+        excep_log("Req ID SOCKET_ERROR" + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
+        if ( (!committed) && (!rolled_back) ) rollback_request(); // ensure rollback does not re-occur, since this causes db errors!!
         db_session_completed=true;
         return; // once process_request is complete, db_buffer make_inactive is run
     }
     else {
         msg_cnt++;
-        excep_log("Req ID " + std::to_string(req_id) + " msg " + msg + " cnt " + std::to_string(msg_cnt));
         create_request(msg);
         if ( (msg_cnt==1) || (rolled_back) || (committed) )
           start_request(); // only set snapshot if neccessary
         execute_request(req_id);
-        excep_log("Req ID " + std::to_string(req_id) + " before verify ");  
-
         verify_request();
-        excep_log("Req ID " + std::to_string(req_id) + " after verify " + std::to_string(comparator_pass));  
-
+        verify_completed=true;
+        
     }
   }
 }
@@ -162,7 +195,7 @@ void db_adjudicator::process_request() {
 void db_adjudicator::verify_request() {
   comparator_pass=true;
 
-  if (db_count == 1) { return; }
+  if (db_count == 1) return;
 
   for ( auto & d1 : v_dg ) {
     for ( auto & d2 : v_dg ) {
@@ -170,7 +203,10 @@ void db_adjudicator::verify_request() {
         for (int i{0}; i<statement_cnt; ++i) {
           comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i)) 
                           && (d1.get_hash(i) == d2.get_hash(i));
-          if (!comparator_pass) break;
+          if (!comparator_pass) {
+            excep_log("Request ID: verify, hash " + d1.get_hash(i) + " " + d2.get_hash(i) + " row cnt " + std::to_string(d1.get_rows_affected(i)) + " " + std::to_string(d2.get_rows_affected(i)));
+            break;
+          }
         }
       }
       if (!comparator_pass) break;
@@ -184,6 +220,7 @@ void db_adjudicator::commit_request() {
   for ( auto & d : v_dg )
     d.commit();
   committed=true;
+  excep_log("Req ID: commit_request " + std::to_string(req_id) + " COMMIT " + std::to_string(committed));
 }
 
 void db_adjudicator::rollback_request() {
@@ -191,11 +228,15 @@ void db_adjudicator::rollback_request() {
   for ( auto & d : v_dg )
     d.rollback();
   rolled_back=true;
+  excep_log("Req ID: rollback_request " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back));
 }
 
 void db_adjudicator::set_session(std::unique_ptr<tcp_session>&& sess) {
-  tcp_sess = std::move(sess);
-  tcp_sess->start();
+  //excep_log("Req ID: before session started " );
+  tcp_sess = std::move(sess); // moved from the tcp_server, which successfully accepted a network connection and established a network session
+  tcp_sess->start(); // starts reading messages from the already opened network socket
+  excep_log("Req ID: " + std::to_string(req_id) + " tcp session started");
+
 }
 
 void db_adjudicator::disconnect() {
@@ -218,14 +259,17 @@ void db_adjudicator::make_connection() {
 }
 
 void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, std::string>> & v_result) {
-  // for (const 
+  for (const auto & r : v_result) {
+    tcp_sess->client_response(r.first + "|" + r.second);
+  }
+  tcp_sess->client_response(CLIENT_MSG_END);
 }
 
 // member function of db_executor is defined in request due to the callback (reply_to_client_upon_first_don)
 void db_executor::execute_sql_grains () {
   for ( auto & s : v_sg ) {
-    try {
-      if (req.is_one_select()) {
+    try {      
+      if (s.is_select()) {
         int sid = s.get_statement_id();
         std::future<void> hash_result ( std::async([this, sid]() { execute_hash_select(sid);} ));
         std::future<void> select_result ( std::async([this, sid]() { execute_select(sid);} ));
@@ -250,8 +294,8 @@ void db_executor::execute_sql_grains () {
     prepare_client_results();
     const auto & v_result = get_sql_results();
     req.send_results_to_client(v_result);
+    excep_log("REQ ID " + std::to_string(req.get_req_id()) + " after sending results");
   }
-    
-    
+  
 }
 

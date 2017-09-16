@@ -2,6 +2,7 @@
 log/exception*.log
 *.gch*
 settings.xml
+settings*.xml
 sadiags.xml
 conn.log
 ftnode

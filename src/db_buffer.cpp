@@ -60,15 +60,19 @@ void db_buffer::set_db_info() {
 }
 
 bool db_buffer::make_inactive (const int req_id) {
+  excep_log("REQ ID " + std::to_string(req_id) + " before make_inactive ");
   {
     std::lock_guard<std::mutex> lk(mx);
     st.push(req_id);
+    excep_log("REQ ID " + std::to_string(req_id) + " set inactive, before - slots_free++ ");
     request_buffer.at({req_id})->set_active(false);
     request_buffer.at({req_id})->set_session(nullptr);
-   // request_buffer.at({req_id})->disconnect();
+    request_buffer.at({req_id})->disconnect();
     slots_free++;
+    excep_log("REQ ID " + std::to_string(req_id) + " set inactive, after - slots_free++ ");
   }
   cv_stack.notify_one();
+  excep_log("REQ ID " + std::to_string(req_id) + " after make_inactive ");
   return true;
 }
 
@@ -85,6 +89,7 @@ int db_buffer::make_active (std::unique_ptr<tcp_session>&& tcp_sess) {
     request_buffer.at({rq_id})->make_connection();
     request_buffer.at({rq_id})->set_active(true);
     request_buffer.at({rq_id})->set_session(std::move(tcp_sess));
+    excep_log("REQ ID " + std::to_string(rq_id) + " set active ");
   }
   return rq_id;
 }
