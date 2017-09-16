@@ -32,13 +32,10 @@ void db_service::operator()() {
 
   do {
     auto tcp_sess = tcp_sess_q.pop_unique();
-    excep_log("Got session ");
     int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
 
-    excep_log("Req ID- " + std::to_string(rq_id) + " in DB_SERVICE");
-
     rq = dbf.get_request(rq_id);
-    excep_log("Req ID- " + std::to_string(rq_id) + " after dbf.get_request");
+    // excep_log("Req ID- " + std::to_string(rq_id) + " after dbf.get_request");
     tp.run_job( [rq, dbf_ptr ]() {rq->process_request();  if (!rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });
   } while (!stop_process);
 
