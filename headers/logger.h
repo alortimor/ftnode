@@ -36,8 +36,6 @@ class threadsafe_log {
         auto d = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
         file << "Start: " << d.count() << std::endl; // write initial duration so as to simplify benchmarking
       }
-      else 
-        std::cerr << "Failed to create log file: " << file_path << std::endl;
     }
 
     threadsafe_log (const threadsafe_log &) = delete;
@@ -50,12 +48,10 @@ class threadsafe_log {
           auto d = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
           file << "End: " << d.count() << std::endl;
         }
-        else 
-          std::cerr << "Failed to open/create log file: " << file_path << std::endl;
       }
     }
-
-    void write (const std::string & msg) {
+    // return value: 0 in success, 2 in failure
+    int write (const std::string & msg) {
       // ensure the blocking duration is not included in the calculation written to file.
       auto d = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start); // calculate duration prior to blocking
       // now block if other threads are writing as well
@@ -66,9 +62,10 @@ class threadsafe_log {
           if(file)
             file << d.count() << ": " << msg << std::endl; // assume a new line each time
           else          
-            std::cerr << "Failed to open/create log file: " << file_path << std::endl;
+            return 2;
         }        
       }
+      return 0;
     }
 };
 
@@ -77,7 +74,8 @@ class logger {
     std::unique_ptr<threadsafe_log> lg;
   public:
     logger (std::unique_ptr<threadsafe_log>&& logger) : lg(std::move(logger)) {  }
-    void write (const std::string & msg ) { lg->write(msg); }
+    // return value: 0 in success, 2 in failure
+    int write (const std::string & msg ) { return lg->write(msg); }
 };
 
 #define EXCEPTION_LOG
@@ -86,10 +84,10 @@ class logger {
 
 class log_file_path {
 private:
-  friend void excep_log_(const std::string & msg);
-  friend void excep_log_2_(const std::string & msg);
-  friend void excep_log_3_(const std::string & msg);
-  friend void excep_log_4_(const std::string & msg);
+  friend int excep_log_(const std::string & msg);
+  friend int excep_log_2_(const std::string & msg);
+  friend int excep_log_3_(const std::string & msg);
+  friend int excep_log_4_(const std::string & msg);
   
   friend void set_log1_file_path_(const std::string & path_, const std::string & file_name_);
   friend void set_log2_file_path_(const std::string & path_, const std::string & file_name_);
@@ -129,7 +127,8 @@ inline void set_log4_file_path_(const std::string & path_, const std::string & f
   log4_file_path.file_name = file_name_;
 }
 
-inline void excep_log_(const std::string & msg)
+// return value: 0 in success, 2 in failure
+inline int excep_log_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log;
   static std::string cur_path;
@@ -140,10 +139,11 @@ inline void excep_log_(const std::string & msg)
       std::make_unique<threadsafe_log>(log1_file_path.path, log1_file_path.file_name));
   }
     
-	exception_log->write(msg);
+	return exception_log->write(msg);
 }
 
-inline void excep_log_2_(const std::string & msg)
+// return value: 0 in success, 2 in failure
+inline int excep_log_2_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log;
   static std::string cur_path;
@@ -154,10 +154,11 @@ inline void excep_log_2_(const std::string & msg)
       std::make_unique<threadsafe_log>(log2_file_path.path, log2_file_path.file_name));
   }
   
-	exception_log->write(msg);
+	return exception_log->write(msg);
 }
 
-inline void excep_log_3_(const std::string & msg)
+// return value: 0 in success, 2 in failure
+inline int excep_log_3_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log;
   static std::string cur_path;
@@ -168,10 +169,11 @@ inline void excep_log_3_(const std::string & msg)
       std::make_unique<threadsafe_log>(log3_file_path.path, log3_file_path.file_name));
   }
     
-	exception_log->write(msg);
+	return exception_log->write(msg);
 }
 
-inline void excep_log_4_(const std::string & msg)
+// return value: 0 in success, 2 in failure
+inline int excep_log_4_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log;
   static std::string cur_path;
@@ -182,14 +184,16 @@ inline void excep_log_4_(const std::string & msg)
       std::make_unique<threadsafe_log>(log4_file_path.path, log4_file_path.file_name));
   }
     
-	exception_log->write(msg);
+	return exception_log->write(msg);
 }
 
+// in all excep_log- functions: return value: 0 in success, 2 in failure
 #define excep_log(x) excep_log_(x)
 #define excep_log_2(x) excep_log_2_(x)
 #define excep_log_3(x) excep_log_3_(x)
 #define excep_log_4(x) excep_log_4_(x)
-
+// set the full file path of excep_log loggers. Do this before using them. 
+// If file paths not set they use default filepaths (see cpp file: log1_file_path ...)
 #define set_log1_file_path(x, y)  set_log1_file_path_(x, y)
 #define set_log2_file_path(x, y)  set_log2_file_path_(x, y)
 #define set_log3_file_path(x, y)  set_log3_file_path_(x, y)
