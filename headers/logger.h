@@ -74,24 +74,150 @@ class threadsafe_log {
 
 class logger {
   private:
-    std::shared_ptr<threadsafe_log> lg;
+    std::unique_ptr<threadsafe_log> lg;
   public:
-    logger (std::shared_ptr<threadsafe_log> logger) : lg(logger) {  }
+    logger (std::unique_ptr<threadsafe_log>&& logger) : lg(std::move(logger)) {  }
     void write (const std::string & msg ) { lg->write(msg); }
 };
 
 #define EXCEPTION_LOG
 
 #ifdef EXCEPTION_LOG
+
+class log_file_path {
+private:
+  friend void excep_log_(const std::string & msg);
+  friend void excep_log_2(const std::string & msg);
+  friend void excep_log_3(const std::string & msg);
+  friend void excep_log_4(const std::string & msg);
+  
+  friend void set_log1_file_path_(const std::string & path_, const std::string & file_name_);
+  friend void set_log2_file_path_(const std::string & path_, const std::string & file_name_);
+  friend void set_log3_file_path_(const std::string & path_, const std::string & file_name_);
+  friend void set_log4_file_path_(const std::string & path_, const std::string & file_name_);
+  
+  std::string path;
+  std::string file_name;
+  
+public:
+  log_file_path(const std::string & path_="", const std::string & file_name_="") :
+    path{path_}, file_name{file_name_} {}
+};
+
+extern log_file_path log1_file_path;
+extern log_file_path log2_file_path;
+extern log_file_path log3_file_path;
+extern log_file_path log4_file_path;
+
+inline void set_log1_file_path_(const std::string & path_, const std::string & file_name_) {
+  log1_file_path.path = path_;
+  log1_file_path.file_name = file_name_;
+}
+
+inline void set_log2_file_path_(const std::string & path_, const std::string & file_name_) {
+  log2_file_path.path = path_;
+  log2_file_path.file_name = file_name_;
+}
+
+inline void set_log3_file_path_(const std::string & path_, const std::string & file_name_) {
+  log3_file_path.path = path_;
+  log3_file_path.file_name = file_name_;
+}
+
+inline void set_log4_file_path_(const std::string & path_, const std::string & file_name_) {
+  log4_file_path.path = path_;
+  log4_file_path.file_name = file_name_;
+}
+
 inline void excep_log_(const std::string & msg)
 {
-	static logger exception_log( std::make_shared<threadsafe_log>("log", "exceptions"));
-	exception_log.write(msg);
+  static std::unique_ptr<logger> exception_log;
+  static std::string cur_path;
+  static std::string cur_file_name;
+  // if file path is changed create a new exception_log
+  if(cur_path != log1_file_path.path || cur_file_name != log1_file_path.file_name) {
+    exception_log = std::make_unique<logger>(
+      std::make_unique<threadsafe_log>(log1_file_path.path, log1_file_path.file_name));
+  }
+    
+	exception_log->write(msg);
+}
+
+inline void excep_log_2(const std::string & msg)
+{
+  static std::unique_ptr<logger> exception_log;
+  static std::string cur_path;
+  static std::string cur_file_name;
+  // if file path is changed create a new exception_log
+  if(cur_path != log2_file_path.path || cur_file_name != log2_file_path.file_name) {
+    exception_log = std::make_unique<logger>(
+      std::make_unique<threadsafe_log>(log2_file_path.path, log2_file_path.file_name));
+  }
+  
+	exception_log->write(msg);
+}
+
+inline void excep_log_3(const std::string & msg)
+{
+  static std::unique_ptr<logger> exception_log;
+  static std::string cur_path;
+  static std::string cur_file_name;
+  // if file path is changed create a new exception_log
+  if(cur_path != log3_file_path.path || cur_file_name != log3_file_path.file_name) {
+    exception_log = std::make_unique<logger>(
+      std::make_unique<threadsafe_log>(log3_file_path.path, log3_file_path.file_name));
+  }
+    
+	exception_log->write(msg);
+}
+
+inline void excep_log_4(const std::string & msg)
+{
+  static std::unique_ptr<logger> exception_log;
+  static std::string cur_path;
+  static std::string cur_file_name;
+  // if file path is changed create a new exception_log
+  if(cur_path != log4_file_path.path || cur_file_name != log4_file_path.file_name) {
+    exception_log = std::make_unique<logger>(
+      std::make_unique<threadsafe_log>(log4_file_path.path, log4_file_path.file_name));
+  }
+    
+	exception_log->write(msg);
+}
+
+template<int T>
+inline void test_log2(const std::string & msg, const std::string & path="", const std::string & file_name="")
+{
+  static std::unique_ptr<logger> exception_log = 
+    std::make_unique<logger>(std::make_unique<threadsafe_log>("log", std::to_string(T)));
+  if(!path.empty() || !file_name.empty())
+    exception_log = std::make_unique<logger>(std::make_unique<threadsafe_log>(path, file_name));
+    
+	exception_log->write(msg);
 }
 
 #define excep_log(x) excep_log_(x)
+#define excep_log_2(x) excep_log_2(x)
+#define excep_log_3(x) excep_log_3(x)
+#define excep_log_4(x) excep_log_4(x)
+
+#define set_log1_file_path(x, y)  set_log1_file_path_(x, y)
+#define set_log2_file_path(x, y)  set_log2_file_path_(x, y)
+#define set_log3_file_path(x, y)  set_log3_file_path_(x, y)
+#define set_log4_file_path(x, y)  set_log4_file_path_(x, y)
+
 #else
+
 #define excep_log(x)
+#define excep_log_2(x)
+#define excep_log_3(x)
+#define excep_log_4(x)
+
+#define set_log1_file_path(x, y)  
+#define set_log2_file_path(x, y) 
+#define set_log3_file_path(x, y)  
+#define set_log4_file_path(x, y)  
+
 #endif
 
 #endif // LOGGER_H
