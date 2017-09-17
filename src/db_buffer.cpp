@@ -9,7 +9,7 @@ extern logger exception_log;
 
 db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_size}  {
   
-  const auto& xml_db_sources = settings().get(xmls::ftnode::dbsources::ELEM_NAME);
+  const auto& xml_db_sources = settings().get(xmls::ftnode_mw::DBSOURCES);
   const int db_count = static_cast<int>(xml_db_sources.size());
 
   excep_log( "After reading xml file - DB Count " + std::to_string(db_count) );
@@ -60,19 +60,16 @@ void db_buffer::set_db_info() {
 }
 
 bool db_buffer::make_inactive (const int req_id) {
-  excep_log("REQ ID " + std::to_string(req_id) + " before make_inactive ");
   {
     std::lock_guard<std::mutex> lk(mx);
     st.push(req_id);
-    excep_log("REQ ID " + std::to_string(req_id) + " set inactive, before - slots_free++ ");
     request_buffer.at({req_id})->set_active(false);
     request_buffer.at({req_id})->set_session(nullptr);
     request_buffer.at({req_id})->disconnect();
     slots_free++;
-    excep_log("REQ ID " + std::to_string(req_id) + " set inactive, after - slots_free++ ");
+    excep_log("REQ ID " + std::to_string(req_id) + " set inactive");
   }
   cv_stack.notify_one();
-  excep_log("REQ ID " + std::to_string(req_id) + " after make_inactive ");
   return true;
 }
 

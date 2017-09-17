@@ -132,9 +132,10 @@ void db_adjudicator::process_request() {
   std::string msg;
   unsigned short msg_cnt{0};
   while (!db_session_completed) {
+    excep_log("Req ID " + std::to_string(req_id) + " before get_client_msg " );
     msg = tcp_sess->get_client_msg();
     rtrim(msg, '\n');
-    // excep_log("Req ID " + std::to_string(req_id) + " msg " + msg );
+    excep_log("Req ID " + std::to_string(req_id) + " after get_client_msg " + msg );
 
     if (msg==COMMIT && verify_completed) {
         excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
@@ -201,8 +202,7 @@ void db_adjudicator::verify_request() {
     for ( auto & d2 : v_dg ) {
       if (d1.get_db_id() != d2.get_db_id()) {
         for (int i{0}; i<statement_cnt; ++i) {
-          comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i)) 
-                          && (d1.get_hash(i) == d2.get_hash(i));
+          comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i)) && (d1.get_hash(i) == d2.get_hash(i));
           if (!comparator_pass) {
             excep_log("Request ID: verify, hash " + d1.get_hash(i) + " " + d2.get_hash(i) + " row cnt " + std::to_string(d1.get_rows_affected(i)) + " " + std::to_string(d2.get_rows_affected(i)));
             break;
@@ -260,7 +260,7 @@ void db_adjudicator::make_connection() {
 
 void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, std::string>> & v_result) {
   for (const auto & r : v_result) {
-    tcp_sess->client_response(r.first + "|" + r.second);
+    tcp_sess->client_response(r.second);
   }
   tcp_sess->client_response(CLIENT_MSG_END);
 }

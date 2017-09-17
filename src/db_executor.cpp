@@ -69,9 +69,10 @@ void db_executor::execute_hash_select(int statement_id) {
 void db_executor::execute_select (int statement_id) {
   cmd->setCommandText(v_sg.at(statement_id).get_sql().c_str());
   try {
-    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " SELECT " + v_sg.at(statement_id).get_sql() );
+    //excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " SELECT " + v_sg.at(statement_id).get_sql() );
     cmd->Execute();
-    v_sg.at(statement_id).set_db_return_values(cmd->isResultSet(), cmd->RowsAffected() );
+    v_sg.at(statement_id).set_db_return_values(cmd->isResultSet(),0 );
+    //excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " rows affected " + std::to_string(cmd->RowsAffected())  );
   }
   catch (SAException &x) {
     excep_log( "SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) + " :" + v_sg.at(statement_id).get_sql());
