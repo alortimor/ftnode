@@ -83,7 +83,7 @@ void tcp_session::stop_session() {
 // this is called from db_adjudicator class, once the request has been activated
 // and is continually read until the request has been finalised.
 std::string tcp_session::get_client_msg() {
-  excep_log("Before uniue lock in get_client_msg ");
+  excep_log("Before unique lock in get_client_msg ");
   std::string msg;
   {
     std::unique_lock<std::mutex> lk(tcp_sess_mx);

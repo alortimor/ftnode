@@ -124,8 +124,7 @@ void db_adjudicator::execute_request(int rq_id) {
     futures.push_back(std::async([&d, rq_id] () { d.execute_sql_grains(); } ));
 
   for (auto & fut : futures)
-    fut.get();
-    
+    fut.get();    
 }
 
 void db_adjudicator::process_request() {
@@ -165,13 +164,22 @@ void db_adjudicator::process_request() {
     else if (msg==ROLLBACK ) {
         excep_log("Req ID ROLLBACK - " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) && (!rolled_back) ) rollback_request();
+        rolled_back=true;
+        verify_completed=false;
+        committed=false;
+        comparator_pass=false;
         tcp_sess->client_response(ROLLED_BACK + "\n");
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
         excep_log("Req ID DISCONNECT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) && (!rolled_back) ) rollback_request(); // Ensure a rollback occurs for a premature disconnect
+        rolled_back=true;
+        committed=false;
+        verify_completed=false;
+        comparator_pass=false;
         db_session_completed=true;
+        msg_cnt=0;
         tcp_sess->client_response(DISCONNECTED + "\n");
         return; // once process_request is complete, db_buffer.make_inactive is run, which elegantly cleans memory 
     }
@@ -184,6 +192,8 @@ void db_adjudicator::process_request() {
     else {
         msg_cnt++;
         create_request(msg);
+        excep_log("Req ID " + std::to_string(req_id) + " AFTER CREATE ");
+
         if ( (msg_cnt==1) || (rolled_back) || (committed) )
           start_request(); // only set snapshot if neccessary
         execute_request(req_id);
