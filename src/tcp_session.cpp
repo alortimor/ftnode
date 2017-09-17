@@ -51,12 +51,14 @@ void tcp_session::action_msg_received(const boost::system::error_code& ec, std::
 
   if (ec != 0) {
     msg_q.push(SOCKET_ERROR);
+    cv_sess.notify_one();
     stop_session();
     return;
   }
   socket_msg = req_to_str(bytes_transferred); 
   excep_log("Socket message " + socket_msg);
   msg_q.push(socket_msg);  // push onto queue that is read from db_adjudicator
+  cv_sess.notify_one();
   excep_log("Socket message, after push " + socket_msg);
 
   m_request.consume(bytes_transferred); // ensure buffer is empty prior to starting to read
@@ -74,6 +76,7 @@ void tcp_session::read_handler() {
 }
 
 void tcp_session::stop_session() {
+  excep_log("Stop Session "+ std::to_string(session_id));  
   stop();
 }
 
@@ -81,12 +84,13 @@ void tcp_session::stop_session() {
 // and is continually read until the request has been finalised.
 std::string tcp_session::get_client_msg() {
   excep_log("Before uniue lock in get_client_msg ");
-  std::unique_lock<std::mutex> lk(tcp_sess_mx);
-  cv_sess.wait(lk, [this]{ return ( !msg_q.empty() ); });
   std::string msg;
-  excep_log("After cv_sess.wait in get_client_msg: "+msg);
-  msg = msg_q.front();
-  msg_q.pop();
+  {
+    std::unique_lock<std::mutex> lk(tcp_sess_mx);
+    cv_sess.wait(lk, [this]{ return ( !msg_q.empty() ); });
+    msg = msg_q.front();
+    msg_q.pop();
+  }
   // excep_log("TCP_SESSION Queue message read " + msg);
   return msg;
 }

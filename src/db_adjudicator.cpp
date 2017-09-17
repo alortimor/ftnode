@@ -143,21 +143,21 @@ void db_adjudicator::process_request() {
           excep_log("Req ID COMMIT- " + std::to_string(req_id) + " In COMMIT - comparator " + std::to_string(comparator_pass));
           if (comparator_pass) {
             commit_request();
-            tcp_sess->client_response(COMMITED+"\n");
             excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after commit ");
             committed=true;
             rolled_back=false;
             verify_completed=false;
             comparator_pass=false;
+            tcp_sess->client_response(COMMITED+"\n");
           }
           else {
             rollback_request();
-            tcp_sess->client_response(ROLLED_BACK + "\n");
             excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after rollback ");
             committed=false;
             rolled_back=true;
             verify_completed=false;
             comparator_pass=false;
+            tcp_sess->client_response(ROLLED_BACK + "\n");
           }
         }
         msg_cnt=0;
@@ -165,13 +165,14 @@ void db_adjudicator::process_request() {
     else if (msg==ROLLBACK ) {
         excep_log("Req ID ROLLBACK - " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) && (!rolled_back) ) rollback_request();
+        tcp_sess->client_response(ROLLED_BACK + "\n");
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
         excep_log("Req ID DISCONNECT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) && (!rolled_back) ) rollback_request(); // Ensure a rollback occurs for a premature disconnect
-        tcp_sess->client_response(DISCONNECTED + "\n");
         db_session_completed=true;
+        tcp_sess->client_response(DISCONNECTED + "\n");
         return; // once process_request is complete, db_buffer.make_inactive is run, which elegantly cleans memory 
     }
     else if (msg==SOCKET_ERROR) {
@@ -188,7 +189,6 @@ void db_adjudicator::process_request() {
         execute_request(req_id);
         verify_request();
         verify_completed=true;
-        
     }
   }
 }
