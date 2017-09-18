@@ -70,6 +70,7 @@ void db_adjudicator::create_request(const std::string & msg) {
   // count of the number of sql statements
   committed=false;
   rolled_back=false;
+  first_done=false;
   statement_cnt = std::count (msg.begin(), msg.end(), ';');
 
   std::string sql_part; // sql satement
@@ -123,10 +124,12 @@ void db_adjudicator::execute_request(int rq_id) {
   std::vector<std::future<void>> futures;
 
   for ( auto & d : v_dg )
-    futures.push_back(std::async([&d, rq_id] () { d.execute_sql_grains(); } ));
+    futures.push_back(std::async([&d, rq_id] () { d.execute_sql_grains(); excep_log("DB ID: " + std::to_string(d.get_db_id()) + " after execute_sql_grains"); } ));
 
   for (auto & fut : futures)
     fut.get();
+    
+  excep_log("REQ ID: " + std::to_string(rq_id) + " after fut.get");
 }
 
 void db_adjudicator::process_request() {
@@ -299,11 +302,14 @@ void db_executor::execute_sql_grains () {
 
         hash_result.get();
         select_result.get();
+        excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after SELECT EXECUTE");
+
       }
       else {
         set_statement(s.get_sql());
         cmd->Execute();
         s.set_db_return_values(false, cmd->RowsAffected() );
+        excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after update/insert EXECUTE");
       }
     }
     catch (SAException &x) {

@@ -28,6 +28,7 @@ void db_executor::add_sql_grain(int statement_id, const std::string sql) {
 
 void db_executor::clear_sql_grains() {
   v_sg.clear();
+  v_result.clear();
 }
 
 void db_executor::disconnect() { 
