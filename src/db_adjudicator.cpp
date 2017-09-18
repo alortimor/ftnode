@@ -76,6 +76,8 @@ void db_adjudicator::create_request(const std::string & msg) {
   unsigned short pos{0}; // position of ";" character
   unsigned short start{0}; // start position to initiate search from
 
+  for ( auto & d : v_dg ) d.clear_sql_grains();
+
   for (int i{0}; i<statement_cnt; ++i) {
     pos = msg.find(';', start);
     sql_part = msg.substr(start, pos-start);
@@ -124,7 +126,7 @@ void db_adjudicator::execute_request(int rq_id) {
     futures.push_back(std::async([&d, rq_id] () { d.execute_sql_grains(); } ));
 
   for (auto & fut : futures)
-    fut.get();    
+    fut.get();
 }
 
 void db_adjudicator::process_request() {
@@ -132,14 +134,13 @@ void db_adjudicator::process_request() {
   unsigned short msg_cnt{0};
   while (!db_session_completed) {
     excep_log("Req ID " + std::to_string(req_id) + " before get_client_msg " );
+    msg = "";
     msg = tcp_sess->get_client_msg();
     rtrim(msg, '\n');
     excep_log("Req ID " + std::to_string(req_id) + " after get_client_msg " + msg );
 
     if (msg==COMMIT && verify_completed) {
-        excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
-          excep_log("Req ID COMMIT- " + std::to_string(req_id) + " In COMMIT - comparator " + std::to_string(comparator_pass));
           if (comparator_pass) {
             commit_request();
             excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after commit ");
@@ -150,8 +151,9 @@ void db_adjudicator::process_request() {
             tcp_sess->client_response(COMMITED+"\n");
           }
           else {
+            excep_log("Req ID " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " before rollback ");
             rollback_request();
-            excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after rollback ");
+            excep_log("Req ID " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after rollback ");
             committed=false;
             rolled_back=true;
             verify_completed=false;
@@ -192,11 +194,14 @@ void db_adjudicator::process_request() {
     else {
         msg_cnt++;
         create_request(msg);
-        excep_log("Req ID " + std::to_string(req_id) + " AFTER CREATE ");
+        excep_log("Req ID " + std::to_string(req_id) + " AFTER CREATE - " + std::to_string(msg_cnt));
 
         if ( (msg_cnt==1) || (rolled_back) || (committed) )
           start_request(); // only set snapshot if neccessary
+        excep_log("Req ID " + std::to_string(req_id) + " AFTER START");
+
         execute_request(req_id);
+        excep_log("Req ID " + std::to_string(req_id) + " AFTER EXECUTE");
         verify_request();
         verify_completed=true;
     }
@@ -254,6 +259,14 @@ void db_adjudicator::disconnect() {
     d.disconnect();
 }
 
+const long db_adjudicator::get_session_id() const {
+  return tcp_sess->get_session_id();
+}
+
+const int db_adjudicator::get_req_id() const { return req_id; }
+
+const bool db_adjudicator::is_active() const  { return active; }
+
 void db_adjudicator::set_connection_info(const db_info & dbi) {
   for ( auto & d : v_dg ) {
     if (d.get_db_id() == dbi.db_id )  {
@@ -301,10 +314,11 @@ void db_executor::execute_sql_grains () {
 
   }
   if (req.reply_to_client_upon_first_done(db_id) ) {
+    excep_log("REQ ID " + std::to_string(req.get_req_id()) + " before sending results " + std::to_string(db_id));
     prepare_client_results();
     const auto & v_result = get_sql_results();
     req.send_results_to_client(v_result);
-    excep_log("REQ ID " + std::to_string(req.get_req_id()) + " after sending results");
+    excep_log("REQ ID " + std::to_string(req.get_req_id()) + " after sending results " + std::to_string(db_id));
   }
   
 }

@@ -52,11 +52,12 @@ class db_adjudicator {
     db_adjudicator(int rq_id, int db_cnt);
 
     void initialize(); // note: this needs to be called always immediately after creating this object
-    const int get_req_id () const { return req_id; };
+    const int get_req_id () const;
     const int get_statement_cnt () const { return statement_cnt; };
-    bool is_active() { return active; };
+    const bool is_active() const;
     void set_session(std::unique_ptr<tcp_session>&& ); // sets the private ptr to the tcp_session 
                                                        // and starts reading from the socket
+    const long get_session_id() const;
     void set_active(bool) ;  // set with a mutex in db_buffer when a slot in the buffer becomes available
     void set_connection_info(const db_info &);
     void make_connection();

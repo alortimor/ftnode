@@ -2,7 +2,7 @@
 
 //https://stackoverflow.com/questions/28478278/working-with-boostasiostreambuf
 
-std::atomic<long long> tcp_session::atomic_sess_id{0};
+std::atomic<long> tcp_session::atomic_sess_id{0};
 
 tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock) : m_sock{sock} {
   atomic_sess_id++;
@@ -13,7 +13,7 @@ void tcp_session::start() {
   read_handler();
 }
 
-const long long  tcp_session::get_session_id() const {
+const long  tcp_session::get_session_id() const {
   return session_id;
 }
 
@@ -56,10 +56,8 @@ void tcp_session::action_msg_received(const boost::system::error_code& ec, std::
     return;
   }
   socket_msg = req_to_str(bytes_transferred); 
-  excep_log("Socket message " + socket_msg);
   msg_q.push(socket_msg);  // push onto queue that is read from db_adjudicator
   cv_sess.notify_one();
-  excep_log("Socket message, after push " + socket_msg);
 
   m_request.consume(bytes_transferred); // ensure buffer is empty prior to starting to read
   read_handler(); // continue reading
@@ -83,7 +81,6 @@ void tcp_session::stop_session() {
 // this is called from db_adjudicator class, once the request has been activated
 // and is continually read until the request has been finalised.
 std::string tcp_session::get_client_msg() {
-  excep_log("Before unique lock in get_client_msg ");
   std::string msg;
   {
     std::unique_lock<std::mutex> lk(tcp_sess_mx);

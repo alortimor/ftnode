@@ -26,6 +26,10 @@ void db_executor::add_sql_grain(int statement_id, const std::string sql) {
   v_sg.emplace_back( statement_id, sql);
 }
 
+void db_executor::clear_sql_grains() {
+  v_sg.clear();
+}
+
 void db_executor::disconnect() { 
   if (con->isConnected()) con->Disconnect(); 
 }
@@ -55,13 +59,17 @@ const std::string db_executor::get_connection_str() const { return dbi.con_str; 
 void db_executor::execute_hash_select(int statement_id) {
   set_sql_hash_statement(v_sg.at(statement_id).get_sql());
   try {
+    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before HASH SELECT " );
     cmd_hash->Execute();
     std::string hash_val{""};
     while (cmd_hash->FetchNext())
       hash_val = (const char*)cmd_hash->Field(1).asString();
     v_sg.at(statement_id).set_hash_val(hash_val);
+    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " after HASH SELECT " );
+
   }
   catch (SAException &x) {
+    excep_log( "Get HASH exception : DB ID " + std::to_string(db_id) );
     excep_log( "Get HASH exception : " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) );
   }
 }
@@ -69,12 +77,13 @@ void db_executor::execute_hash_select(int statement_id) {
 void db_executor::execute_select (int statement_id) {
   cmd->setCommandText(v_sg.at(statement_id).get_sql().c_str());
   try {
-    //excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " SELECT " + v_sg.at(statement_id).get_sql() );
+    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before SELECT " );
     cmd->Execute();
-    v_sg.at(statement_id).set_db_return_values(cmd->isResultSet(),0 );
-    //excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " rows affected " + std::to_string(cmd->RowsAffected())  );
+    v_sg.at(statement_id).set_db_return_values(true,0);
+    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " after SELECT " );
   }
   catch (SAException &x) {
+    excep_log( "SELECT error:  DB ID " + std::to_string(db_id) + " :" + v_sg.at(statement_id).get_sql());
     excep_log( "SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) + " :" + v_sg.at(statement_id).get_sql());
     v_sg.at(statement_id).set_db_return_values(true, -1);
   }

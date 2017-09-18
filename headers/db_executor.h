@@ -59,6 +59,7 @@ class db_executor {
     void disconnect();
     void rollback();
     void commit();
+    void clear_sql_grains();
     void add_sql_grain(int, const std::string);
     std::string const get_begin_statement() const;
     std::string const get_connection_str() const;
