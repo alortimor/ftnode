@@ -22,7 +22,7 @@
     <property name="number_scale_fmt_mid" value=", 'FM"/>
     <property name="number_scale_fmt_suffix" value="')"/>
     <property name="apply_number_format_mask" value="true"/>
-    <property name="concat_col_prefix" value="select * from ("/>
+    <property name="concat_col_prefix" value="select t.* from ("/>
     <property name="concat_col_suffix" value=") t where 0=1"/>
     <property name="date_fmt_prefix" value=" to_char("/>
     <property name="date_fmt_suffix" value=",'yyyymmdd')"/>

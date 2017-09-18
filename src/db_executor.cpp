@@ -58,7 +58,11 @@ const std::string db_executor::get_product() const { return dbi.product; }
 const std::string db_executor::get_connection_str() const { return dbi.con_str; }
 
 void db_executor::execute_hash_select(int statement_id) {
-  set_sql_hash_statement(v_sg.at(statement_id).get_sql());
+  std::string hash_sql;
+  hash_sql = dbi.properties.at("hash_prefix") + generate_concat_columns(v_sg.at(statement_id).get_sql()) 
+                + dbi.properties.at("hash_mid") + v_sg.at(statement_id).get_sql() + dbi.properties.at("hash_suffix");
+  cmd_hash->setCommandText(hash_sql.c_str());
+
   try {
     excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before HASH SELECT " );
     cmd_hash->Execute();
@@ -66,11 +70,10 @@ void db_executor::execute_hash_select(int statement_id) {
     while (cmd_hash->FetchNext())
       hash_val = (const char*)cmd_hash->Field(1).asString();
     v_sg.at(statement_id).set_hash_val(hash_val);
-    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " after HASH SELECT " );
 
   }
   catch (SAException &x) {
-    excep_log( "Get HASH exception : DB ID " + std::to_string(db_id) );
+    excep_log( "Get HASH exception : DB ID " + std::to_string(db_id) + ": " + hash_sql );
     excep_log( "Get HASH exception : " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) );
   }
 }
@@ -81,7 +84,6 @@ void db_executor::execute_select (int statement_id) {
     excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before SELECT " );
     cmd->Execute();
     v_sg.at(statement_id).set_db_return_values(true,0);
-    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " after SELECT " );
   }
   catch (SAException &x) {
     excep_log( "SELECT error:  DB ID " + std::to_string(db_id) + " :" + v_sg.at(statement_id).get_sql());
@@ -94,13 +96,15 @@ void db_executor::execute_select (int statement_id) {
 // concatenates all columns of a client SELECT into a single column.
 // For a given SELECT statement, in an db_executor, this function is only ever called once.
 std::string db_executor::generate_concat_columns(const std::string & sql) {
-  cmd->setCommandText((dbi.properties.at("concat_col_prefix") + sql + dbi.properties.at("concat_col_suffix")).c_str());
+  std::string exec_sql {""};
+  exec_sql = dbi.properties.at("concat_col_prefix") + sql + dbi.properties.at("concat_col_suffix");
+  cmd->setCommandText(exec_sql.c_str());
 
   try {
     cmd->Execute(); // executes a dummy statement that performs no fetch, but exposes all columns and data types
   }
   catch (SAException &x) {
-    excep_log( "Generate Columns Error : " +  std::string( (const char*)x.ErrText()) );
+    excep_log( "Generate Columns Error : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql);
   }
 
   std::string concat_str {""};
@@ -143,12 +147,6 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   }
   // strip off trailing concat operators prior to returning.
   return rtrim(concat_str, '|');
-}
-
-void db_executor::set_sql_hash_statement(const std::string & sql) {
-  std::string hash_sql;
-  hash_sql = dbi.properties.at("hash_prefix") + generate_concat_columns(sql) + dbi.properties.at("hash_mid") + sql + dbi.properties.at("hash_suffix");
-  cmd_hash->setCommandText(hash_sql.c_str());
 }
 
 void db_executor::exec_sql() {

@@ -33,7 +33,6 @@ class db_adjudicator {
     bool db_session_completed {false};  // set when a client issues disconnect
 
     std::queue<std::string> msg_q; // q for seding message to session, which writes the msg to the socket
-
     void create_request(const std::string &); // sql_received
 
     void start_request(); // executes "begin" with a mutex/lock guard
@@ -44,19 +43,18 @@ class db_adjudicator {
                            // explicit commit or rollback, once results of the execute_request have
                            // been sucessfully communicated to the client
     void rollback_request(); // can be called based on an explicit rollback from the client
-                             // or if the comparator 
-
+                             // or if the comparator
     std::shared_ptr<tcp_session> tcp_sess;
   public:
-
     db_adjudicator(int rq_id, int db_cnt);
 
     void initialize(); // note: this needs to be called always immediately after creating this object
     const int get_req_id () const;
-    const int get_statement_cnt () const { return statement_cnt; };
+    const int get_statement_cnt () const;
     const bool is_active() const;
-    void set_session(std::unique_ptr<tcp_session>&& ); // sets the private ptr to the tcp_session 
-                                                       // and starts reading from the socket
+    void stop_session();
+    void start_session(std::unique_ptr<tcp_session>&& ); // sets the private ptr to the tcp_session
+                                                         // and starts reading from the socket
     const long get_session_id() const;
     void set_active(bool) ;  // set with a mutex in db_buffer when a slot in the buffer becomes available
     void set_connection_info(const db_info &);

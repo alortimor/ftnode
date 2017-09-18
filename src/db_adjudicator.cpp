@@ -72,6 +72,7 @@ void db_adjudicator::create_request(const std::string & msg) {
   rolled_back=false;
   first_done=false;
   statement_cnt = std::count (msg.begin(), msg.end(), ';');
+  excep_log("Req ID " + std::to_string(req_id) + " create_request " + std::to_string(active ));
 
   std::string sql_part; // sql satement
   unsigned short pos{0}; // position of ";" character
@@ -87,7 +88,6 @@ void db_adjudicator::create_request(const std::string & msg) {
     for ( auto & d : v_dg )
       d.add_sql_grain(i, sql_part);
   }
-  
 }
 
 // this member communicates back to the client when at least one of
@@ -103,8 +103,6 @@ bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
   else
     return false;
 }
-
-void db_adjudicator::set_active(bool current_active) { active = current_active; };
 
 void db_adjudicator::start_request() {
   // Set BEGIN transaction statement.
@@ -124,19 +122,18 @@ void db_adjudicator::execute_request(int rq_id) {
   std::vector<std::future<void>> futures;
 
   for ( auto & d : v_dg )
-    futures.push_back(std::async([&d, rq_id] () { d.execute_sql_grains(); excep_log("DB ID: " + std::to_string(d.get_db_id()) + " after execute_sql_grains"); } ));
+    futures.push_back(std::async([&d, rq_id] () { d.execute_sql_grains(); } ));
 
   for (auto & fut : futures)
     fut.get();
-    
-  excep_log("REQ ID: " + std::to_string(rq_id) + " after fut.get");
 }
 
 void db_adjudicator::process_request() {
   std::string msg;
   unsigned short msg_cnt{0};
+  db_session_completed=false;
   while (!db_session_completed) {
-    excep_log("Req ID " + std::to_string(req_id) + " before get_client_msg " );
+    //excep_log("Req ID " + std::to_string(req_id) + " before get_client_msg " );
     msg = "";
     msg = tcp_sess->get_client_msg();
     rtrim(msg, '\n');
@@ -146,7 +143,6 @@ void db_adjudicator::process_request() {
         if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
           if (comparator_pass) {
             commit_request();
-            excep_log("Req ID COMMIT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after commit ");
             committed=true;
             rolled_back=false;
             verify_completed=false;
@@ -154,9 +150,7 @@ void db_adjudicator::process_request() {
             tcp_sess->client_response(COMMITED+"\n");
           }
           else {
-            excep_log("Req ID " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " before rollback ");
             rollback_request();
-            excep_log("Req ID " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back) + " after rollback ");
             committed=false;
             rolled_back=true;
             verify_completed=false;
@@ -167,7 +161,6 @@ void db_adjudicator::process_request() {
         msg_cnt=0;
     }
     else if (msg==ROLLBACK ) {
-        excep_log("Req ID ROLLBACK - " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) && (!rolled_back) ) rollback_request();
         rolled_back=true;
         verify_completed=false;
@@ -177,7 +170,6 @@ void db_adjudicator::process_request() {
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
-        excep_log("Req ID DISCONNECT- " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) && (!rolled_back) ) rollback_request(); // Ensure a rollback occurs for a premature disconnect
         rolled_back=true;
         committed=false;
@@ -189,7 +181,6 @@ void db_adjudicator::process_request() {
         return; // once process_request is complete, db_buffer.make_inactive is run, which elegantly cleans memory 
     }
     else if (msg==SOCKET_ERROR) {
-        excep_log("Req ID SOCKET_ERROR" + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back) + " COMMITTED " + std::to_string(rolled_back));
         if ( (!committed) && (!rolled_back) ) rollback_request(); // ensure rollback does not re-occur, since this causes db errors!!
         db_session_completed=true;
         return; // once process_request is complete, db_buffer make_inactive is run
@@ -197,14 +188,9 @@ void db_adjudicator::process_request() {
     else {
         msg_cnt++;
         create_request(msg);
-        excep_log("Req ID " + std::to_string(req_id) + " AFTER CREATE - " + std::to_string(msg_cnt));
-
         if ( (msg_cnt==1) || (rolled_back) || (committed) )
           start_request(); // only set snapshot if neccessary
-        excep_log("Req ID " + std::to_string(req_id) + " AFTER START");
-
         execute_request(req_id);
-        excep_log("Req ID " + std::to_string(req_id) + " AFTER EXECUTE");
         verify_request();
         verify_completed=true;
     }
@@ -249,13 +235,14 @@ void db_adjudicator::rollback_request() {
   excep_log("Req ID: rollback_request " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back));
 }
 
-void db_adjudicator::set_session(std::unique_ptr<tcp_session>&& sess) {
+void db_adjudicator::start_session(std::unique_ptr<tcp_session>&& sess) {
   //excep_log("Req ID: before session started " );
   tcp_sess = std::move(sess); // moved from the tcp_server, which successfully accepted a network connection and established a network session
   tcp_sess->start(); // starts reading messages from the already opened network socket
   excep_log("Req ID: " + std::to_string(req_id) + " tcp session started");
-
 }
+
+void db_adjudicator::stop_session() { tcp_sess =nullptr;}
 
 void db_adjudicator::disconnect() {
   for ( auto & d : v_dg )
@@ -268,7 +255,11 @@ const long db_adjudicator::get_session_id() const {
 
 const int db_adjudicator::get_req_id() const { return req_id; }
 
+void db_adjudicator::set_active(bool current_active) { active = current_active; };
+
 const bool db_adjudicator::is_active() const  { return active; }
+
+const int db_adjudicator::get_statement_cnt() const  { return statement_cnt; };
 
 void db_adjudicator::set_connection_info(const db_info & dbi) {
   for ( auto & d : v_dg ) {
@@ -302,14 +293,14 @@ void db_executor::execute_sql_grains () {
 
         hash_result.get();
         select_result.get();
-        excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after SELECT EXECUTE");
+        // excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after SELECT EXECUTE");
 
       }
       else {
         set_statement(s.get_sql());
         cmd->Execute();
         s.set_db_return_values(false, cmd->RowsAffected() );
-        excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after update/insert EXECUTE");
+        // excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after update/insert EXECUTE");
       }
     }
     catch (SAException &x) {
