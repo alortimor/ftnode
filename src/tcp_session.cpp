@@ -48,7 +48,6 @@ std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
 }
 
 void tcp_session::action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred) {
-
   if (ec != 0) {
     msg_q.push(SOCKET_ERROR);
     cv_sess.notify_one();
@@ -70,11 +69,11 @@ void tcp_session::read_handler() {
               // excep_log("Before action " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );
               action_msg_received(ec, bytes_transferred);
           }
-  ); 
+  );
 }
 
 void tcp_session::stop_session() {
-  excep_log("Stop Session "+ std::to_string(session_id));  
+  excep_log("Stop Session "+ std::to_string(session_id));
   stop();
 }
 

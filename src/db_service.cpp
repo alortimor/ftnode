@@ -42,4 +42,3 @@ void db_service::operator()() {
   tp.stop_service();
   excep_log("Thread pool service shut down");
 }
-

@@ -14,9 +14,10 @@ static std::string &rtrim(std::string &s, char c) {
 
 db_executor::db_executor(int dbid, db_adjudicator& _req) :
              db_id{dbid}
-           , cmd{std::make_unique<SACommand>()}
            , con{std::make_unique<SAConnection>()}
+           , cmd{std::make_unique<SACommand>()}
            , cmd_hash{std::make_unique<SACommand>()}
+           , cmd_sel{std::make_unique<SACommand>()}
            , req{_req}
            { }
 
@@ -64,7 +65,7 @@ void db_executor::execute_hash_select(int statement_id) {
   cmd_hash->setCommandText(hash_sql.c_str());
 
   try {
-    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before HASH SELECT " );
+    //excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before HASH SELECT " );
     cmd_hash->Execute();
     std::string hash_val{""};
     while (cmd_hash->FetchNext())
@@ -79,10 +80,9 @@ void db_executor::execute_hash_select(int statement_id) {
 }
 
 void db_executor::execute_select (int statement_id) {
-  cmd->setCommandText(v_sg.at(statement_id).get_sql().c_str());
+  cmd_sel->setCommandText(v_sg.at(statement_id).get_sql().c_str());
   try {
-    excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before SELECT " );
-    cmd->Execute();
+    cmd_sel->Execute();
     v_sg.at(statement_id).set_db_return_values(true,0);
   }
   catch (SAException &x) {
@@ -98,10 +98,10 @@ void db_executor::execute_select (int statement_id) {
 std::string db_executor::generate_concat_columns(const std::string & sql) {
   std::string exec_sql {""};
   exec_sql = dbi.properties.at("concat_col_prefix") + sql + dbi.properties.at("concat_col_suffix");
-  cmd->setCommandText(exec_sql.c_str());
+  cmd_hash->setCommandText(exec_sql.c_str());
 
   try {
-    cmd->Execute(); // executes a dummy statement that performs no fetch, but exposes all columns and data types
+    cmd_hash->Execute(); // executes a dummy statement that performs no fetch, but exposes all columns and data types
   }
   catch (SAException &x) {
     excep_log( "Generate Columns Error : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql);
@@ -111,22 +111,22 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   std::string fmt {""};
   std::string field_name;
   
-  // excep_log(std::string("After Concat dummy column generate ") + std::to_string(cmd->FieldCount()) );
+  // excep_log(std::string("After Concat dummy column generate ") + std::to_string(cmd_hash->FieldCount()) );
 
   // using the information related to data types, we can now generated a concatenated string
   // that can be hashed
-  for (int i{1}; i <= cmd->FieldCount(); i++) {
-    field_name = (const char*)cmd->Field(i).Name();
+  for (int i{1}; i <= cmd_hash->FieldCount(); i++) {
+    field_name = (const char*)cmd_hash->Field(i).Name();
     try {
-      switch (cmd->Field(i).FieldType()) {
+      switch (cmd_hash->Field(i).FieldType()) {
         case SA_dtNumeric:
-          // cmd->Field(field_name.c_str()).FieldScale() != 65531 -- this is due to a bug in PostgreSQL library
-          if (cmd->Field(field_name.c_str()).FieldScale() >0 && cmd->Field(field_name.c_str()).FieldScale() != 65531) {
+          // cmd_hash->Field(field_name.c_str()).FieldScale() != 65531 -- this is due to a bug in PostgreSQL library
+          if (cmd_hash->Field(field_name.c_str()).FieldScale() >0 && cmd_hash->Field(field_name.c_str()).FieldScale() != 65531) {
             fmt = "";
             if (dbi.properties.at("apply_number_format_mask")=="true")
-              fmt += std::string(cmd->Field(field_name.c_str()).FieldPrecision(),'9') +"."+ std::string(cmd->Field(field_name.c_str()).FieldScale(), '9');
+              fmt += std::string(cmd_hash->Field(field_name.c_str()).FieldPrecision(),'9') +"."+ std::string(cmd_hash->Field(field_name.c_str()).FieldScale(), '9');
 
-            concat_str += dbi.properties.at("number_scale_fmt_prefix") + field_name 
+            concat_str += dbi.properties.at("number_scale_fmt_prefix") + field_name
                          + dbi.properties.at("number_scale_fmt_mid") + fmt + dbi.properties.at("number_scale_fmt_suffix") +" ||";
           }
           else {
@@ -146,7 +146,8 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     }
   }
   // strip off trailing concat operators prior to returning.
-  return rtrim(concat_str, '|');
+  rtrim(concat_str, '|');
+  return concat_str;
 }
 
 void db_executor::exec_sql() {
@@ -165,20 +166,25 @@ const std::vector<std::pair<char, std::string>> & db_executor::get_sql_results()
 void db_executor::prepare_client_results() {
   std::string str;
   for (const auto & s : v_sg ) {
-    if (!s.get_is_result())
+    if (!s.is_select())
       v_result.emplace_back(std::make_pair('M', std::to_string(s.get_rows_affected() )));
     else {
-      excep_log("DB ID : " + std::to_string(db_id) + " sid " + std::to_string(s.get_statement_id())+ " get_is_result - before fetch");
-      if (cmd->isOpened()) { // checks 
-        while(cmd->FetchNext()) {
-          str = "";
-          for (int i{1}; i <= cmd->FieldCount(); i++) {
-            str += cmd->Field(i).asString();
-            str += ",";
+      // excep_log("DB ID : " + std::to_string(db_id) + " sid " + std::to_string(s.get_statement_id())+ " get_is_result - before fetch");
+      try {
+        if (cmd_sel->isOpened()) { // checks 
+          while(cmd_sel->FetchNext()) {
+            str = "";
+            for (int i{1}; i <= cmd_sel->FieldCount(); i++) {
+              str += cmd_sel->Field(i).asString();
+              str += ",";
+            }
+            rtrim(str, ',');
+            v_result.emplace_back(std::make_pair('S', str));
           }
-          rtrim(str, ',');
-          v_result.emplace_back(std::make_pair('S', str));
         }
+      }
+      catch (SAException &x) {
+        excep_log( "Prepare Client Results Error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id) );
       }
     }
     std::cout << "Results " << v_result.back().first << " " << v_result.back().second << "\n";
@@ -206,15 +212,16 @@ bool db_executor::make_connection() {
     if (dbi.set_isolation) con->setIsolationLevel(dbi.con_isolation_evel);
     
     /*  cmd:      used to execute all DML
-     *  cmd_hash: used to obtain the hash of the result set generated by cmd, if the statement is a SELECT, and
-     *            is run asynchronously to the cmd, but uses the same SELECT statement.
+     *  cmd_sel:  used to execute a SELECT to generate client result set
+     *  cmd_hash: used to obtain the hash of the result set generated by cmd_sel, if the statement is a SELECT, and
+     *            is run asynchronously to the cmd_sel, but uses the same SELECT statement.
      *            Executes a controlled SELECT to generate a hash instead
      *            No ORDER BY injection is necessary.
-     *            
      */ 
 
-    cmd->setConnection(con.get());
     cmd_hash->setConnection(con.get());
+    cmd_sel->setConnection(con.get());
+    cmd->setConnection(con.get());
   }
   catch (SAException &x) { 
     excep_log( "Connection error :" + dbi.product + " - " + std::string((const char*)x.ErrText()) );
