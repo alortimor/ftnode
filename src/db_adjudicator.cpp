@@ -112,20 +112,33 @@ void db_adjudicator::start_request() {
   // ensure begin transaction is performed exclusively
   {
     std::lock_guard<std::mutex> lk(mx);
-    for ( auto & d : v_dg )
-      d.exec_sql();
+    try {
+      for ( auto & d : v_dg )
+        d.exec_sql();
+    }
+    catch (SAException &x) {
+      failure_msg = "EXEC SQL Error: " + std::string( (const char*)x.ErrText() );
+      throw std::runtime_error(failure_msg);
+    }
   }
 }
 
-void db_adjudicator::execute_request(int rq_id) {
+void db_adjudicator::execute_request() {
   // execute database grains asynchronously
   std::vector<std::future<void>> futures;
 
   for ( auto & d : v_dg )
-    futures.push_back(std::async([&d, rq_id] () { d.execute_sql_grains(); } ));
+    futures.push_back(std::async([&d] () { d.execute_sql_grains(); } ));
 
-  for (auto & fut : futures)
-    fut.get();
+  try {
+    for (auto & fut : futures)
+      fut.get();
+  }
+  catch (const std::exception& e) { 
+    throw std::runtime_error(e.what());
+  }
+  verify_request();
+  verify_completed=true;
 }
 
 void db_adjudicator::process_request() {
@@ -190,9 +203,13 @@ void db_adjudicator::process_request() {
         create_request(msg);
         if ( (msg_cnt==1) || (rolled_back) || (committed) )
           start_request(); // only set snapshot if neccessary
-        execute_request(req_id);
-        verify_request();
-        verify_completed=true;
+
+        try {
+          execute_request();
+        }
+        catch(std::exception & e ) {
+          handle_failure(e.what());
+        }
     }
   }
 }
@@ -277,6 +294,19 @@ void db_adjudicator::make_connection() {
   }
 }
 
+void db_adjudicator::handle_failure(const std::string & err) {
+  tcp_sess->client_response(FAILURE + " transaction rolled back " + err);
+  if ( (!committed) && (!rolled_back) && (first_done) ) 
+    rollback_request();
+  
+  committed=false;
+  rolled_back=false;
+  first_done=false;
+  comparator_pass=false;
+  verify_completed=false;
+  tcp_sess->client_response(FAILURE);
+}
+
 void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, std::string>> & v_result) {
   for (const auto & r : v_result) {
     tcp_sess->client_response(r.second);
@@ -287,38 +317,52 @@ void db_adjudicator::send_results_to_client(const std::vector<std::pair<char, st
 // member function of db_executor is defined in request due to the callback (reply_to_client_upon_first_don)
 void db_executor::execute_sql_grains () {
   for ( auto & s : v_sg ) {
-    try {      
+    try {
       if (s.is_select()) {
         int sid = s.get_statement_id();
         std::future<void> hash_result ( std::async([this, sid]() { execute_hash_select(sid);} ));
         std::future<void> select_result ( std::async([this, sid]() { execute_select(sid);} ));
 
-        hash_result.get();
         select_result.get();
+        hash_result.get();
         // excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after SELECT EXECUTE");
-
       }
       else {
-        set_statement(s.get_sql());
-        cmd->Execute();
-        s.set_db_return_values(false, cmd->RowsAffected() );
+        try {
+          set_statement(s.get_sql());
+          cmd->Execute();
+          s.set_db_return_values(false, cmd->RowsAffected() );
+        }
+        catch (SAException &x) {
+          failure_msg = "DB Execute error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id);
+          cmd->Cancel();
+          throw std::runtime_error(failure_msg);
+        }
         // excep_log("REQ ID: " + std::to_string(req.get_req_id()) + " DB ID: " + std::to_string(db_id) + " after update/insert EXECUTE");
       }
     }
-    catch (SAException &x) {
-      excep_log( (const char*)x.ErrText() );
-      s.set_db_return_values(false, -1);
-      break;
+    catch (std::exception & e) {
+      // failure_msg = "DB Execute error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id);
+      // excep_log( failure_msg);
+      throw std::runtime_error(e.what());
+      //s.set_db_return_values(false, -1);
     }
 
   }
   if (req.reply_to_client_upon_first_done(db_id) ) {
-    //excep_log("REQ ID " + std::to_string(req.get_req_id()) + " before sending results " + std::to_string(db_id));
-    prepare_client_results();
-    const auto & v_result = get_sql_results();
-    req.send_results_to_client(v_result);
-    excep_log("REQ ID " + std::to_string(req.get_req_id()) + " after sending results " + std::to_string(db_id));
+    try {
+      //excep_log("REQ ID " + std::to_string(req.get_req_id()) + " before sending results " + std::to_string(db_id));
+      prepare_client_results();
+      const auto & v_result = get_sql_results();
+      req.send_results_to_client(v_result);
+      excep_log("REQ ID " + std::to_string(req.get_req_id()) + " after sending results " + std::to_string(db_id));
+    }
+    catch (std::exception & e) {
+      failure_msg = "Send Results error: " +std::string(e.what())+ " DB ID: " + std::to_string(db_id);
+      throw std::runtime_error(failure_msg);
+      //excep_log( failure_msg );
+      throw;
+    }
   }
-  
 }
 

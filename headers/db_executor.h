@@ -30,6 +30,7 @@ class db_executor {
 
     // used to generate the string to hash within the DB Server.
     std::string generate_concat_columns(const std::string &);
+    std::string failure_msg {""};
     
     void execute_hash_select(int); // executes asynchronously alongside execute_select()
     void execute_select (int); // based on statement_id (passed in), which is set in sql_grain

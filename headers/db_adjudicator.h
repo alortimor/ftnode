@@ -31,12 +31,13 @@ class db_adjudicator {
     bool comparator_pass {false}; // boolean set when all db_executors have completed execution of DML
                                   // and each result for each DML statement matches
     bool db_session_completed {false};  // set when a client issues disconnect
+    std::string failure_msg {""};
 
     std::queue<std::string> msg_q; // q for seding message to session, which writes the msg to the socket
     void create_request(const std::string &); // sql_received
 
     void start_request(); // executes "begin" with a mutex/lock guard
-    void execute_request(int); // runs database executors asynchronously
+    void execute_request(); // runs database executors asynchronously
     void verify_request(); // equivalent of the comparator
     void commit_request(); // executes "commit" with a mutex/lock guard
                            // based on outcome of verify request as well as client
@@ -60,6 +61,7 @@ class db_adjudicator {
     void set_connection_info(const db_info &);
     void make_connection();
     void disconnect();
+    void handle_failure(const std::string &);
     bool reply_to_client_upon_first_done (int); //db_id
     void send_results_to_client(const std::vector<std::pair<char, std::string>> &); // v_results. is executed if reply_to_client_upon_first_done is true
 
