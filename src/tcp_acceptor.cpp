@@ -5,10 +5,10 @@
 extern logger exception_log;
 
 tcp_acceptor::tcp_acceptor(asio::io_service& ios, unsigned short port, db_service* _db_service) :
-  m_ios(ios),
-  acc(m_ios, asio::ip::tcp::endpoint( asio::ip::address_v4::any(), port)),  not_accepting(false),
-  db_service_{_db_service} {  
-}
+     m_ios(ios)
+    ,acc(m_ios, asio::ip::tcp::endpoint(asio::ip::address_v4::any(), port))
+    ,not_accepting(false)
+    ,db_service_{_db_service} {  }
 
 void tcp_acceptor::start() {
   acc.listen();
@@ -27,9 +27,7 @@ void tcp_acceptor::initialise() {
 void tcp_acceptor::add_session_to_buffer(const boost::system::error_code&ec, std::shared_ptr<asio::ip::tcp::socket> sock) {
   if (ec == 0) {
     session = std::make_unique<tcp_session>(sock);
-    excep_log("After session created ");
     db_service_->add_request(std::move(session)); // move to db buffer
-    excep_log("After session moved ");
   }
   else
       excep_log("Error code = " + std::to_string(ec.value()) + ": " + ec.message());

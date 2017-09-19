@@ -34,7 +34,7 @@ class db_adjudicator {
     std::string failure_msg {""};
 
     std::queue<std::string> msg_q; // q for seding message to session, which writes the msg to the socket
-    void create_request(const std::string &); // sql_received
+    void create_request(const std::string &, int); // client_msg, msg_cnt
 
     void start_request(); // executes "begin" with a mutex/lock guard
     void execute_request(); // runs database executors asynchronously

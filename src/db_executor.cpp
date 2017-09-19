@@ -88,6 +88,7 @@ void db_executor::execute_hash_select(int statement_id) {
 void db_executor::execute_select (int statement_id) {
   cmd_sel->setCommandText(v_sg.at(statement_id).get_sql().c_str());
   try {
+    cmd_sel->setOption("UseCursor") = "1";
     cmd_sel->Execute();
     v_sg.at(statement_id).set_db_return_values(true,0);
   }
@@ -101,22 +102,22 @@ void db_executor::execute_select (int statement_id) {
 // concatenates all columns of a client SELECT into a single column.
 // For a given SELECT statement, in an db_executor, this function is only ever called once.
 std::string db_executor::generate_concat_columns(const std::string & sql) {
+  std::string exec_sql {""};
   try {
-    std::string exec_sql {""};
     exec_sql = dbi.properties.at("concat_col_prefix") + sql + dbi.properties.at("concat_col_suffix");
     cmd_hash->setCommandText(exec_sql.c_str());
   }
   catch (SAException &x) {
-    failure_msg = "Generate Cols Error : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+    failure_msg = "Generate Cols generate : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
     cmd_hash->Cancel();
-    throw std::runtime_error(failure_msg);s
+    throw std::runtime_error(failure_msg);
   }
 
   try {
     cmd_hash->Execute(); // executes a dummy statement that performs no fetch, but exposes all columns and data types
   }
   catch (SAException &x) {
-    failure_msg = "Generate Cols Error : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+    failure_msg = "Generate Cols execute : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
     cmd_hash->Cancel();
     throw std::runtime_error(failure_msg);
   }
@@ -225,10 +226,11 @@ bool db_executor::make_connection() {
     if (dbi.product=="sqlanywhere") {
       con->setOption(_TSA("SQLANY.LIBS")) = _TSA("/opt/sqlanywhere17/lib64/libdbcapi_r.so");
     }
-      
+
     con->Connect(dbi.con_str.c_str(), dbi.usr.c_str(), dbi.pswd.c_str(), dbi.con_cl);
     con->setAutoCommit(SA_AutoCommitOff);
     if (dbi.set_isolation) con->setIsolationLevel(dbi.con_isolation_evel);
+    // con->setIsolationLevel(dbi.con_isolation_evel);
     
     /*  cmd:      used to execute all DML
      *  cmd_sel:  used to execute a SELECT to generate client result set
@@ -242,7 +244,7 @@ bool db_executor::make_connection() {
     cmd_sel->setConnection(con.get());
     cmd->setConnection(con.get());
   }
-  catch (SAException &x) { 
+  catch (SAException &x) {
     excep_log( "Connection error :" + dbi.product + " - " + std::string((const char*)x.ErrText()) );
     return false; 
   }
