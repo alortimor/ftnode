@@ -168,7 +168,7 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     }
   }
   // strip off trailing concat operators prior to returning.
-  concat_str += "||''";
+  concat_str += "''";
   return concat_str;
 }
 
