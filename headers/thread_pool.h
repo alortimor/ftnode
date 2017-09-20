@@ -1,6 +1,6 @@
 #ifndef THREADPOOL_H_
 #define THREADPOOL_H_
-
+//based on Boost Proactor model
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>

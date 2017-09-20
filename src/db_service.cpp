@@ -12,6 +12,8 @@
 #include "logger.h"
 #include "xml_settings.h"
 
+// Manages the Interface between the Adjudicator and the TCP/IP Service
+
 // Refer to this blog, since it effects performance regarding double moves
 // http://scottmeyers.blogspot.co.uk/2014/07/should-move-only-types-ever-be-passed.html
 // void db_service::add_request(tcp_session&& _tcp_session) {
@@ -24,7 +26,7 @@ void db_service::stop() {
 }
 
 void db_service::operator()() {
-  thread_pool tp{8};
+  thread_pool tp{12};
   db_buffer dbf(200); // 100
 
   db_buffer * dbf_ptr = &dbf;
@@ -35,11 +37,10 @@ void db_service::operator()() {
     int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
 
     rq = dbf.get_request(rq_id);
-    // excep_log("Req ID- " + std::to_string(rq_id) + " after dbf.get_request");
-    tp.run_job( [rq, dbf_ptr ]() {rq->process_request();  if (!rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });
+    //excep_log("Req ID- " + std::to_string(rq_id) + " after dbf.get_request");
+    tp.run_job( [rq, dbf_ptr ]() { rq->process_request(); if (rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });
   } while (!stop_process);
 
   tp.stop_service();
   excep_log("Thread pool service shut down");
 }
-

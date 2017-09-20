@@ -11,6 +11,9 @@
 #include "db_adjudicator.h"
 #include "db_info.h"
 
+// Fixed buffer, unlike algorithm description in Fig 13 in patent document, which is a variable produced/consumer (Q) type buffer
+// this is hash table instead.
+
 struct Key {
   int request_id;
   bool operator==(const Key &other) const {  return (request_id == other.request_id);  }

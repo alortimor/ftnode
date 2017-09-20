@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "logger.h"
 
+// Main service between client and server
 using namespace boost;
 
 class tcp_session {
@@ -21,6 +22,7 @@ public:
   void stop();
   void client_response(const std::string&);
   std::string get_client_msg();
+  const long  get_session_id() const;
 
 private:
   void action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred);
@@ -41,6 +43,8 @@ private:
   std::string m_response;
   asio::streambuf m_request;
   bool msg_ready{false};
+  static std::atomic<long> atomic_sess_id;
+  long session_id;
 };
 
 #endif // SERVICE_H

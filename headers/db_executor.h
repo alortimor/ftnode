@@ -12,15 +12,16 @@
 extern logger exception_log;
 class db_adjudicator;
 
+// Three of these exist in a vector in the Adjudicator
 class db_executor {
   private:
     int db_id;
+    std::unique_ptr<SAConnection> con;
     std::unique_ptr<SACommand> cmd;  // SACommand object associated with db connection (SAConnection)
                                      // con and all cmd objects have to be wrapped in unique pointers as they cannot be copied or moved
                                      // But with unique ptr wrapping, they can at least be moved and automatically destroyed.
-
-    std::unique_ptr<SAConnection> con;
-    std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a result set
+    std::unique_ptr<SACommand> cmd_hash; // used for generating hash result for a client result set
+    std::unique_ptr<SACommand> cmd_sel; // used for generating client select result set
     db_adjudicator& req; // used for callback purposes, when the first one finishes
     db_info dbi;
     std::vector<sql_grain> v_sg; // this vector should be quicker, since all member functions are defined as noexcept, which means they can not throw exceptions
@@ -30,8 +31,8 @@ class db_executor {
 
     // used to generate the string to hash within the DB Server.
     std::string generate_concat_columns(const std::string &);
+    std::string failure_msg {""};
     
-    void set_sql_hash_statement(const std::string &); // performed prior to execute_hash_select()
     void execute_hash_select(int); // executes asynchronously alongside execute_select()
     void execute_select (int); // based on statement_id (passed in), which is set in sql_grain
     void prepare_client_results();
@@ -59,6 +60,7 @@ class db_executor {
     void disconnect();
     void rollback();
     void commit();
+    void clear_sql_grains();
     void add_sql_grain(int, const std::string);
     std::string const get_begin_statement() const;
     std::string const get_connection_str() const;
@@ -70,8 +72,9 @@ class db_executor {
     void set_statement(const std::string & sql); // used for setting one-off sql statements, i.e. "begin".
                                                  // Used in conjunction wth exec_sql().
 
-    void exec_sql(); // the purpose of this is to explicitly execute sql statements not neccessarily submitted by the client
-    void execute_sql_grains (); // execute all sql statement submitted by client serially
+    void exec_sql(); // the purpose of this is to explicitly execute controlled sql statements initiated by the middle-ware
+    void execute_sql_grains (); // execute all sql statement submitted by client serially, the exception being
+                                // the select to generate the hash is run asynchronously 
 
 };
 

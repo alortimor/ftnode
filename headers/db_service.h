@@ -9,6 +9,7 @@
 #include "db_info.h"
 #include "thread_pool.h"
 
+// Manages the Interface between the Adjudicator and the TCP/IP Service
 const std::string ELEM_DBSOURCES_PRODUCT_ORACLE{"oracle"};
 const std::string ELEM_DBSOURCES_PRODUCT_POSTGRES{"postgres"};
 const std::string ELEM_DBSOURCES_PRODUCT_SQLANYWHERE{"sqlanywhere"};
