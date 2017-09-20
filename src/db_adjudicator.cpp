@@ -315,9 +315,9 @@ void db_adjudicator::make_connection() {
 
 void db_adjudicator::handle_failure(const std::string & err) {
   // issue rollback first-off before anything else
-  if ( (!committed) && (!rolled_back) ) {
-    rollback_request();
-  }
+  //if ( (!committed) && (!rolled_back) ) {
+  //  rollback_request();
+  //}
 
   if ( err==COMPARATOR_FAIL )  {
     excep_log(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");
