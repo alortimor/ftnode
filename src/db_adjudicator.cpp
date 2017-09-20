@@ -213,7 +213,7 @@ void db_adjudicator::process_request() {
     else {
         msg_cnt++;
         create_request(msg, msg_cnt);
-        if ( (msg_cnt==1) || (rolled_back) || (committed) )
+        if ( (msg_cnt==1) || ( (!rolled_back) && (!committed)) )
           start_request(); // only set snapshot if neccessary
 
         try {
@@ -221,6 +221,7 @@ void db_adjudicator::process_request() {
         }
         catch(std::exception & e ) {
           handle_failure(e.what());
+          msg_cnt=0;
         }
     }
   }
@@ -312,15 +313,16 @@ void db_adjudicator::make_connection() {
 
 void db_adjudicator::handle_failure(const std::string & err) {
   // issue rollback first-off before anything else
-  if ( (!committed) && (!rolled_back) ) rollback_request();
+  if ( (!committed) && (!rolled_back) ) {
+    rollback_request();
+  }
 
   if ( err==COMPARATOR_FAIL )  {
-    rollback_request();
-    excep_log("Req ID: " + std::to_string(req_id) + " COMPARATOR_FAIL");
+    excep_log(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");
     tcp_sess->client_response(COMPARATOR_FAIL + "\n");
   }
   else {
-    excep_log("Req ID: " + std::to_string(req_id) + " FAILURE " + err);
+    excep_log(std::to_string(tcp_sess->get_session_id()) + " FAILURE " + err);
     tcp_sess->client_response(FAILURE + " Transaction rolled back " + err + "\n");
   }
 
@@ -344,7 +346,7 @@ void db_executor::execute_sql_grains () {
     try {
       if (s.is_select()) {
         if ( dbi.properties.at("asynch_hash")=="Y"  ) { // check in place, since SQL Anywhere library cannot execute asynchronous queries
-                                                        // on the same connection object
+                                                        // on the same connection object, but Oracle & PostgreSQL are able to.
           int sid = s.get_statement_id();
           std::future<void> hash_result ( std::async([this, sid]() { execute_hash_select(sid);} ));
           std::future<void> select_result ( std::async([this, sid]() { execute_select(sid);} ));
