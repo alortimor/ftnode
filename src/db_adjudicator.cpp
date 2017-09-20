@@ -117,17 +117,14 @@ void db_adjudicator::start_request() {
   {
     std::lock_guard<std::mutex> lk(mx);
     try {
-      for ( auto & d : v_dg )
+      for ( auto & d : v_dg ) {
         d.exec_sql();
-      for ( auto & d : v_dg) {
-        if (d.get_db_id()==2) {
-          d.set_statement("SET TEMPORARY OPTION isolation_level = 'snapshot'");
-          d.exec_sql();
-          d.set_statement("select 1");
+        if( !d.get_db_info().properties.at("beg_tr2").empty() )
+        {
+          d.set_statement(d.get_db_info().properties.at("beg_tr2")); 
           d.exec_sql();
         }
       }
-
     }
     catch (SAException &x) {
       failure_msg = "EXEC SQL Error: " + std::string( (const char*)x.ErrText() );

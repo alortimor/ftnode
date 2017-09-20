@@ -24,6 +24,8 @@ db_executor::db_executor(int dbid, db_adjudicator& _req) :
 
 int const db_executor::get_db_id() const { return db_id; };
 
+const db_info& db_executor::get_db_info() const { return dbi; }
+
 void db_executor::add_sql_grain(int statement_id, const std::string sql) {
   v_sg.emplace_back( statement_id, sql);
 }
@@ -41,7 +43,7 @@ void db_executor::set_statement(const std::string & sql) {
   cmd->setCommandText(sql.c_str());
 }
 
-std::string const db_executor::get_begin_statement() const { return dbi.begin_statement; }
+std::string const db_executor::get_begin_statement() const { return dbi.properties.at("beg_tr1"); } // return dbi.begin_statement;
 
 int const db_executor::get_rows_affected(int statement_id) const {
   return v_sg.at(statement_id).get_rows_affected();

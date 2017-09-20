@@ -5,4 +5,5 @@
 
 void global_init() {
   settings().load_settings_xml(xmls::DEF_SETTING_FILE_NAME);
+  //set_log1_file_path();
 }

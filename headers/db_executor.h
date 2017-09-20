@@ -75,7 +75,7 @@ class db_executor {
     void exec_sql(); // the purpose of this is to explicitly execute controlled sql statements initiated by the middle-ware
     void execute_sql_grains (); // execute all sql statement submitted by client serially, the exception being
                                 // the select to generate the hash is run asynchronously 
-
+    const db_info& get_db_info() const;
 };
 
 #endif

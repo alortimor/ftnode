@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <ftnode_mw>
 <dbsources>
-  <db id="0" product="postgres"  name="ftnode" user="pg" pwd="pg" port="5432" host="10.11.12.11" cstr= "10.11.12.11,5432@ft_node"  beg_tr="select 1" iso_lev="SA_RepeatableRead">
+  <db id="0" product="postgres"  name="ftnode" user="pg" pwd="pg" port="5432" host="10.11.12.6" cstr= "10.11.12.6,5432@ft_node" iso_lev="SA_RepeatableRead">
     <property name="hash_prefix" value="select md5(string_agg(ht.hash_val,'')) as hash_val from (select md5("/>
     <property name="hash_mid" value=") as hash_val from ("/>
     <property name="hash_suffix" value=") as ht order by hash_val) as ht"/>
@@ -14,8 +14,10 @@
     <property name="date_fmt_prefix" value=" to_char("/>
     <property name="date_fmt_suffix" value=",'yyyymmdd')"/>
     <property name="asynch_hash" value="Y"/>
+    <property name="beg_tr1" value="select 1"/>
+    <property name="beg_tr2" value=""/>
   </db>
-  <db id="1" product="oracle" name="ftnode" user="ordb" pwd="ordb" port="1521" host="10.11.12.18" cstr="//10.11.12.18:1521/ftnode"  beg_tr="select 1 from dual" iso_lev="SA_Serializable">
+  <db id="1" product="oracle" name="ftnode" user="ordb" pwd="ordb" port="1521" host="10.11.12.9" cstr="//10.11.12.9:1521/ftnode" iso_lev="SA_Serializable">
     <property name="hash_prefix" value="select lower(rawtohex(dbms_crypto.hash(utl_raw.cast_to_raw(agg_hash_val),2))) as hash_val from (select listagg(hash_val,'') within group (order by 1) as agg_hash_val from (select lower(rawtohex(dbms_crypto.hash (utl_raw.cast_to_raw("/>
     <property name="hash_mid" value="),2) )) as hash_val from ("/>
     <property name="hash_suffix" value=") ) )"/>
@@ -28,6 +30,8 @@
     <property name="date_fmt_prefix" value=" to_char("/>
     <property name="date_fmt_suffix" value=",'yyyymmdd')"/>
     <property name="asynch_hash" value="N"/>
+    <property name="beg_tr1" value="select 1 from dual"/>
+    <property name="beg_tr2" value=""/>
   </db>
 </dbsources>
 <endpoint ip="127.0.0.1" port="3333"/>

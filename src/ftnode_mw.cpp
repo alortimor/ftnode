@@ -20,7 +20,7 @@ void ftnode_mw::start() {
   std::thread db_service_thread(std::ref(_db_service));
 
   // endpoint has only one element at position 0
-  auto _end_point = settings().get(xmls::ftnode_mw::ENDPOINT).at(0).get();
+  auto _end_point = settings().get(xmls::ftnode::endpoint::ELEM_NAME).at(0).get(); // xmls::ftnode_mw::ENDPOINT
   const unsigned short port_num = static_cast<xmls::end_point*>(_end_point)->port;
   try {
     unsigned int thread_pool_size = std::thread::hardware_concurrency()*2;

@@ -9,7 +9,7 @@ extern logger exception_log;
 
 db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_size}  {
   
-  const auto& xml_db_sources = settings().get(xmls::ftnode_mw::DBSOURCES);
+  const auto& xml_db_sources = settings().get(xmls::ftnode::dbsources::ELEM_NAME); // xmls::ftnode_mw::DBSOURCES
   const int db_count = static_cast<int>(xml_db_sources.size());
 
   excep_log( "After reading xml file - DB Count " + std::to_string(db_count) );
@@ -27,7 +27,7 @@ db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_si
                                  ,xml_db_source->conn_str
                                  ,xml_db_source->user
                                  ,xml_db_source->password
-                                 ,xml_db_source->begin_tr
+                                 //,xml_db_source->begin_tr
                                  ,xml_db_source->iso_level != "server_specific"
                                  ,( xml_db_source->iso_level == "server_specific"
                                     ? SA_RepeatableRead

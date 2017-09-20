@@ -3,7 +3,6 @@
 #ifndef XML_SETTINGS_H_INCLUDED
 #define XML_SETTINGS_H_INCLUDED
 
-// Used to read xml settings
 #include <vector>
 #include <map>
 #include <string>
@@ -19,20 +18,54 @@ namespace xmls {
   // constants
   const std::string DEF_SETTING_FILE_NAME{"settings.xml"};
   // xml file content:
-  const std::string SETTING_XML_HOME = "ftnode_mw";
+  //const std::string SETTING_XML_HOME = "ftnode_mw";
   
-  
+  struct ftnode {
+    static const std::string ELEM_NAME;
+    //static const std::string DBSOURCES;
+    //static const std::string ENDPOINT;
+    
+    struct dbsources {
+      static const std::string ELEM_NAME;
+      
+      //static const std::string DB;
+      
+      struct db {
+        static const std::string ELEM_NAME;
+        
+        static const std::string HOST;
+        static const std::string PORT;
+        static const std::string PWD;
+        static const std::string USER;
+        static const std::string NAME;
+        static const std::string PRODUCT;
+        static const std::string ID;
+        static const std::string CONSTR;
+        static const std::string ISO_LEV;
+        static const std::string PROPERTY;
+        
+        struct property {
+          static const std::string ELEM_NAME;
+          
+          static const std::string NAME;
+          static const std::string VALUE;
+        };
+      };
+    };
 
-  struct ftnode_mw {
-    static const std::string DBSOURCES;
-    static const std::string ENDPOINT;
+    // endpoint
+    struct endpoint {
+      static const std::string ELEM_NAME;
+      
+      static const std::string IP;
+      static const std::string PORT;
+    };    
+    
   };
 
-  struct ftnode_mw_dbsources : public ftnode_mw {
-    static const std::string DB;
-  };
+
   
-  struct ftnode_mw_dbsources_db : public ftnode_mw_dbsources {
+  /*struct db : public dbsources {
     static const std::string HOST;
     static const std::string PORT;
     static const std::string PWD;
@@ -44,22 +77,18 @@ namespace xmls {
     static const std::string BEG_TR;
     static const std::string ISO_LEV;
     static const std::string PROPERTY;
-  };
+  };*/
   
   // db_property
   
  // ftnode::db_src::property::NAME
   
-  struct ftnode_mw_dbsources_db_property : public ftnode_mw_dbsources_db {
-    static const std::string NAME;
-    static const std::string VALUE;
-  };
+  //struct ftnode_mw_dbsources_db_property : public db {
+    //static const std::string NAME;
+    //static const std::string VALUE;
+  //};
   
-  // endpoint
-  struct ftnode_mw_endpoint : public ftnode_mw {
-    static const std::string IP;
-    static const std::string PORT;
-  };
+
 
   // end of: xml file content
   struct setting {
@@ -76,7 +105,7 @@ namespace xmls {
     std::string password;
     std::string host;
     std::string conn_str; // connection string
-    std::string begin_tr; // begin transaction
+    //std::string begin_tr; // begin transaction
     std::string iso_level; // Isolation Level
     std::map<std::string, std::string> properties;
   };
