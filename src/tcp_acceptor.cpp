@@ -2,6 +2,9 @@
 #include "logger.h"
 #include "db_service.h"
 
+// Accepts network connections and moves socket to TCP Service, which forms part of the request
+// that lives in the buffer
+
 extern logger exception_log;
 
 tcp_acceptor::tcp_acceptor(asio::io_service& ios, unsigned short port, db_service* _db_service) :

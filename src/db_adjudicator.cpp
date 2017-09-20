@@ -8,6 +8,8 @@
 
 extern logger exception_log;
 
+// Labelled as Adjudicaor in EU patent and Stankovic's thesis
+
 static std::string & ltrim(std::string &s, char c) {
   s.erase(s.begin(), std::find_if(s.begin(), s.end(), [c](int ch) { return !(ch==c);} ));
   return s;

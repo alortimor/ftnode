@@ -9,6 +9,7 @@
 #include "db_info.h"
 #include "db_executor.h"
 
+// Labelled as Adjudicaor in EU patent and Stankovic's thesis
 class db_adjudicator {
   private:
     int req_id{0};

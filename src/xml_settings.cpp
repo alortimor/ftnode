@@ -1,6 +1,7 @@
 #include "xml_settings.h"
 #include "tinyxml.h"
 
+// XML settings reads settings.xml
 std::map<std::string, SAClient_t> create_con_map() {
   std::map<std::string, SAClient_t> m;
   m["oracle"]       = SA_Oracle_Client;

@@ -12,6 +12,7 @@
 #include "constants.h"
 #include "logger.h"
 
+// Main service between client and server
 using namespace boost;
 
 class tcp_session {

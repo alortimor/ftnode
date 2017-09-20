@@ -9,6 +9,8 @@
 
 using namespace boost;
 
+// TCP Server, manager over acceptor
+
 class db_service;
 
 class tcp_server {

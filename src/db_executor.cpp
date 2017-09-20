@@ -6,6 +6,7 @@
 
 extern logger exception_log;
 
+// Three of these exist in a vector in the Adjudicator
 // only call this within this .cpp file.
 static std::string &rtrim(std::string &s, char c) {
   s.erase(std::find_if(s.rbegin(), s.rend(), [c](int ch) { return !(ch==c);} ).base(), s.end());

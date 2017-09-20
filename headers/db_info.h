@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 
+// Metadata for each OTSDB
 struct db_info {
   int db_id{0};
   std::string product ; // i.e. oracle, postgre, sqlanywhere

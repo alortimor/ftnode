@@ -1,5 +1,7 @@
 #include "tcp_server.h"
 
+// TCP Server, manager over acceptor
+
 tcp_server::tcp_server(db_service* _db_service) : db_service_{_db_service} {
   m_work.reset(new asio::io_service::work(m_ios));
 }

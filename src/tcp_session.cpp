@@ -2,6 +2,8 @@
 
 //https://stackoverflow.com/questions/28478278/working-with-boostasiostreambuf
 
+// TCP Server, manager over acceptor
+
 std::atomic<long> tcp_session::atomic_sess_id{0};
 
 tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock) : m_sock{sock} {

@@ -8,6 +8,7 @@
 #include <mutex>
 #include "tcp_server.h"
 
+// Kick starts the TCP/IP server
 class ftnode_mw {
 public:
   void start();

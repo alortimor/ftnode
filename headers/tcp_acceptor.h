@@ -6,6 +6,10 @@
 #include <memory>
 #include "tcp_session.h"
 
+// Accepts network connections and moves socket to TCP Service, which forms part of the request
+// that lives in the buffer
+
+
 using namespace boost;
 
 class db_service;

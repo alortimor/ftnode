@@ -1,5 +1,7 @@
 #include "logger.h"
 
+// Used to log exceptions
+
 #ifdef EXCEPTION_LOG
 
 //log_file_path log1_file_path{"log", "exceptions"};

@@ -12,6 +12,8 @@
 #include "logger.h"
 #include "xml_settings.h"
 
+// Manages the Interface between the Adjudicator and the TCP/IP Service
+
 // Refer to this blog, since it effects performance regarding double moves
 // http://scottmeyers.blogspot.co.uk/2014/07/should-move-only-types-ever-be-passed.html
 // void db_service::add_request(tcp_session&& _tcp_session) {

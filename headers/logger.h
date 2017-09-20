@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iostream>
 
+// Used to log exceptions
 inline std::string time_stamp() {
 	std::stringstream buffer;
 	using std::chrono::system_clock;

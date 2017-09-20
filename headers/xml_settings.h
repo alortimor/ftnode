@@ -3,6 +3,7 @@
 #ifndef XML_SETTINGS_H_INCLUDED
 #define XML_SETTINGS_H_INCLUDED
 
+// Used to read xml settings
 #include <vector>
 #include <map>
 #include <string>

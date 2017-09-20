@@ -6,6 +6,7 @@
 #include <mutex>
 #include <condition_variable>
 
+// Based on Boost Proactor model
 template<typename T>
 class threadsafe_queue {
   private:

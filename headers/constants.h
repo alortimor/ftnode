@@ -4,7 +4,7 @@
 const char SOCKET_MSG_END{'\n'};
 const std::string CLIENT_MSG_END{"\n\n"};
 
-// i should've used some enums, ran out time :(
+// Should be changed toenums
 const std::string COMMIT{"COMMIT"};
 const std::string COMMITED{"COMMITED"};
 const std::string ROLLBACK{"ROLLBACK"};

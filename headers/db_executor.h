@@ -12,6 +12,7 @@
 extern logger exception_log;
 class db_adjudicator;
 
+// Three of these exist in a vector in the Adjudicator
 class db_executor {
   private:
     int db_id;
