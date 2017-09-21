@@ -33,7 +33,7 @@ void tcp_acceptor::add_session_to_buffer(const boost::system::error_code&ec, std
     db_service_->add_request(std::move(session)); // move to db buffer
   }
   else
-      excep_log("Error code = " + std::to_string(ec.value()) + ": " + ec.message());
+      log_1("Error code = " + std::to_string(ec.value()) + ": " + ec.message());
 
   if (!not_accepting.load())
     initialise();

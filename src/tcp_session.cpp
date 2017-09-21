@@ -24,10 +24,10 @@ void tcp_session::stop() {
     boost::system::error_code ec;
     m_sock->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
     if(ec != 0)
-      excep_log("Shutdown Error = " + std::to_string(ec.value()) + ": " + ec.message());
+      log_1("Shutdown Error = " + std::to_string(ec.value()) + ": " + ec.message());
   }
   else {
-    excep_log("tcp_session::stop: Warning - m_sock is null");
+    log_1("tcp_session::stop: Warning - m_sock is null");
   }
 }
 
@@ -37,7 +37,7 @@ void tcp_session::client_response(const std::string & msg) {
   asio::async_write(*m_sock.get(),
       asio::buffer(buf), [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {
         if (ec != 0) {
-          excep_log("Socket Write Error " + std::to_string(ec.value()) + ": " + ec.message());
+          log_1("Socket Write Error " + std::to_string(ec.value()) + ": " + ec.message());
         }  
       });
 }
@@ -68,14 +68,14 @@ void tcp_session::read_handler() {
   asio::async_read_until(*m_sock.get(), m_request, '\n',
       [this](const boost::system::error_code& ec,
           std::size_t bytes_transferred) {
-              // excep_log("Before action " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );
+              // log_1("Before action " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );
               action_msg_received(ec, bytes_transferred);
           }
   );
 }
 
 void tcp_session::stop_session() {
-  excep_log("Stop Session "+ std::to_string(session_id));
+  log_1("Stop Session "+ std::to_string(session_id));
   stop();
 }
 
@@ -89,7 +89,7 @@ std::string tcp_session::get_client_msg() {
     msg = msg_q.front();
     msg_q.pop();
   }
-  // excep_log("TCP_SESSION Queue message read " + msg);
+  // log_1("TCP_SESSION Queue message read " + msg);
   return msg;
 }
 

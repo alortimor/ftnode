@@ -15,7 +15,7 @@
 #include "./headers/tcp_acceptor.h"
 
 int main() {
-  excep_log("main start");
+  log_1("main start");
   // initalize all global variables
   global_init();
   

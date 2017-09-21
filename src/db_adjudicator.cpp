@@ -76,7 +76,7 @@ void db_adjudicator::create_request(const std::string & msg, int msg_cnt) {
   verify_completed=false;
   comparator_pass=false;
   statement_cnt = std::count (msg.begin(), msg.end(), ';');
-  //excep_log("Req ID " + std::to_string(req_id) + " create_request " + std::to_string(active ));
+  //log_1("Req ID " + std::to_string(req_id) + " create_request " + std::to_string(active ));
 
   std::string sql_part; // sql satement
   unsigned short pos{0}; // position of ";" character
@@ -101,7 +101,7 @@ bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
   std::lock_guard<std::mutex> lk(mx);
   if (!first_done)  {
     first_done = true;
-   // excep_log("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
+   // log_1("Database ID " + std::to_string(db_id) + " completed in request " + std::to_string(req_id));
     return true;
   }
   else
@@ -153,15 +153,16 @@ void db_adjudicator::execute_request() {
 }
 
 void db_adjudicator::process_request() {
+  log_3("process_request");
   std::string msg;
   unsigned short msg_cnt{0};
   db_session_completed=false;
   while (!db_session_completed) {
-    //excep_log("Req ID " + std::to_string(req_id) + " before get_client_msg " );
+    //log_1("Req ID " + std::to_string(req_id) + " before get_client_msg " );
     msg = "";
     msg = tcp_sess->get_client_msg();
     rtrim(msg, '\n');
-    excep_log("Req ID " + std::to_string(req_id) + " Client Message:" + msg );
+    log_1("Req ID " + std::to_string(req_id) + " Client Message:" + msg );
 
     if (msg==COMMIT && verify_completed) {
         if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
@@ -259,7 +260,7 @@ void db_adjudicator::commit_request() {
   for ( auto & d : v_dg )
     d.commit();
   committed=true;
-  //excep_log("Req ID: " + std::to_string(req_id) + " COMMIT " + std::to_string(committed));
+  //log_1("Req ID: " + std::to_string(req_id) + " COMMIT " + std::to_string(committed));
 }
 
 void db_adjudicator::rollback_request() {
@@ -267,14 +268,14 @@ void db_adjudicator::rollback_request() {
   for ( auto & d : v_dg )
     d.rollback();
   rolled_back=true;
-  //excep_log("Req ID: " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back));
+  //log_1("Req ID: " + std::to_string(req_id) + " ROLLBACK " + std::to_string(rolled_back));
 }
 
 void db_adjudicator::start_session(std::unique_ptr<tcp_session>&& sess) {
-  //excep_log("Req ID: before session started " );
+  //log_1("Req ID: before session started " );
   tcp_sess = std::move(sess); // moved from the tcp_server, which successfully accepted a network connection and established a network session
   tcp_sess->start(); // starts reading messages from the already opened network socket
-  //excep_log("Req ID: " + std::to_string(req_id) + " TCP Session started");
+  //log_1("Req ID: " + std::to_string(req_id) + " TCP Session started");
 }
 
 void db_adjudicator::stop_session() { tcp_sess =nullptr;}
@@ -317,11 +318,11 @@ void db_adjudicator::handle_failure(const std::string & err) {
   //}
 
   if ( err==COMPARATOR_FAIL )  {
-    excep_log(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");
+    log_1(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");
     tcp_sess->client_response(COMPARATOR_FAIL + "\n");
   }
   else {
-    excep_log(std::to_string(tcp_sess->get_session_id()) + " FAILURE " + err);
+    log_1(std::to_string(tcp_sess->get_session_id()) + " FAILURE " + err);
     tcp_sess->client_response(FAILURE + " Transaction rolled back " + err + "\n");
   }
 
@@ -381,7 +382,7 @@ void db_executor::execute_sql_grains () {
       prepare_client_results();
       const auto & v_result = get_sql_results();
       req.send_results_to_client(v_result);
-      //excep_log("REQ ID " + std::to_string(req.get_req_id()) + " after sending results " + std::to_string(db_id));
+      //log_1("REQ ID " + std::to_string(req.get_req_id()) + " after sending results " + std::to_string(db_id));
     }
     catch (std::exception & e) {
       failure_msg = "Send Results error: " +std::string(e.what())+ " DB ID: " + std::to_string(db_id);

@@ -8,6 +8,7 @@ tcp_server::tcp_server(db_service* _db_service) : db_service_{_db_service} {
 
 void tcp_server::start(unsigned short port, unsigned short thread_pool_size) {
   assert(thread_pool_size > 0);
+
   // Create accept object and start accepting new connections.
   acc.reset(new tcp_acceptor(m_ios, port, db_service_));
   acc->start();

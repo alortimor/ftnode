@@ -71,12 +71,12 @@ void db_executor::execute_hash_select(int statement_id) {
   catch (SAException &x) {
     failure_msg =  "FAILURE HASH cols error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " + hash_sql ;
     cmd_hash->Cancel();
-    excep_log(failure_msg);
+    log_1(failure_msg);
     throw std::runtime_error(failure_msg);
   }
 
   try {
-    //excep_log("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before HASH SELECT " );
+    //log_1("DB ID: " + std::to_string(db_id) + " sid " + std::to_string(statement_id) +  " before HASH SELECT " );
     cmd_hash->Execute();
     std::string hash_val{""};
     while (cmd_hash->FetchNext())
@@ -133,7 +133,7 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   std::string fmt {""};
   std::string field_name;
   
-  // excep_log(std::string("After Concat dummy column generate ") + std::to_string(cmd_hash->FieldCount()) );
+  // log_1(std::string("After Concat dummy column generate ") + std::to_string(cmd_hash->FieldCount()) );
 
   // using the information related to data types, we can now generated a concatenated string
   // that can be hashed
@@ -192,25 +192,25 @@ const std::vector<std::pair<char, std::string>> & db_executor::get_sql_results()
 void db_executor::prepare_client_results() {
   std::string str;
   for (const auto & s : v_sg ) {
-    //excep_log("DB ID : " + std::to_string(db_id) + " is_select " + std::to_string(s.get_statement_id())+ "|" + std::to_string(s.is_select() ));
+    //log_1("DB ID : " + std::to_string(db_id) + " is_select " + std::to_string(s.get_statement_id())+ "|" + std::to_string(s.is_select() ));
     if (!s.is_select()) {
       v_result.emplace_back(std::make_pair('M', std::to_string(s.get_rows_affected() )));
-      //excep_log("DB ID : " + std::to_string(db_id) + " rows_affected " + std::to_string(s.get_statement_id())+ "|" + std::to_string(s.get_rows_affected()) );
+      //log_1("DB ID : " + std::to_string(db_id) + " rows_affected " + std::to_string(s.get_statement_id())+ "|" + std::to_string(s.get_rows_affected()) );
     }
     else {
-      //excep_log("DB ID : " + std::to_string(db_id) + " before FetchNext " + std::to_string(s.get_statement_id()) );
-      // excep_log("DB ID : " + std::to_string(db_id) + " sid " + std::to_string(s.get_statement_id())+ " get_is_result - before fetch");
+      //log_1("DB ID : " + std::to_string(db_id) + " before FetchNext " + std::to_string(s.get_statement_id()) );
+      // log_1("DB ID : " + std::to_string(db_id) + " sid " + std::to_string(s.get_statement_id())+ " get_is_result - before fetch");
       try {
         while(cmd_sel->FetchNext()) {
           str = "";
-          //excep_log("DB ID : " + std::to_string(db_id) + " before FetchNext " + std::to_string(s.get_statement_id()) );
+          //log_1("DB ID : " + std::to_string(db_id) + " before FetchNext " + std::to_string(s.get_statement_id()) );
           for (int i{1}; i <= cmd_sel->FieldCount(); i++) {
             str += cmd_sel->Field(i).asString();
             str += ",";
           }
           rtrim(str, ',');
           v_result.emplace_back(std::make_pair('S', str));
-          //excep_log("DB ID : " + std::to_string(db_id) + " sid " + std::to_string(s.get_statement_id())+ "|" + str);
+          //log_1("DB ID : " + std::to_string(db_id) + " sid " + std::to_string(s.get_statement_id())+ "|" + str);
         }
       }
       catch (SAException &x) {
@@ -266,7 +266,7 @@ bool db_executor::make_connection() {
     }
   }
   catch (SAException &x) {
-    excep_log( "FAILURE Connection error :" + dbi.product + " - " + std::string((const char*)x.ErrText()) );
+    log_1( "FAILURE Connection error :" + dbi.product + " - " + std::string((const char*)x.ErrText()) );
     return false;
   }
   return true;

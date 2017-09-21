@@ -32,7 +32,7 @@ void ftnode_mw::start() {
       {
         _db_service.stop();
       }
-      excep_log(input_str);
+      log_1(input_str);
     }
 
     db_service_thread.join();
@@ -40,7 +40,7 @@ void ftnode_mw::start() {
   }
   catch (system::system_error&e) {
     std::cerr << e.what();
-    excep_log(e.what());
+    log_1(e.what());
   }
 }
 

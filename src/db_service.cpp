@@ -37,10 +37,10 @@ void db_service::operator()() {
     int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
 
     rq = dbf.get_request(rq_id);
-    //excep_log("Req ID- " + std::to_string(rq_id) + " after dbf.get_request");
+    //log_1("Req ID- " + std::to_string(rq_id) + " after dbf.get_request");
     tp.run_job( [rq, dbf_ptr ]() { rq->process_request(); if (rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });
   } while (!stop_process);
 
   tp.stop_service();
-  excep_log("Thread pool service shut down");
+  log_1("Thread pool service shut down");
 }

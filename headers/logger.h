@@ -80,7 +80,7 @@ class logger {
 ///////////////////////////////////////////////////////////////////////////////////
 // Here define which loggers you want to use. Comment out the loggers
 // you do not want to use/compile. If for example USE_LOG1 is commented out 
-// then excep_log() is not compiled at all in the code.
+// then log() is not compiled at all in the code.
 // USE_EXCEPTION_LOG: generally use loggers. If no loggers used, comment this out.
 // Note: This needs to be on if at least one logger is used.
 // 
@@ -111,10 +111,10 @@ class logger {
 
 class log_file_path {
 private:
-  friend int excep_log_(const std::string & msg);
-  friend int excep_log_2_(const std::string & msg);
-  friend int excep_log_3_(const std::string & msg);
-  friend int excep_log_4_(const std::string & msg);
+  friend int log_1_(const std::string & msg);
+  friend int log_2_(const std::string & msg);
+  friend int log_3_(const std::string & msg);
+  friend int log_4_(const std::string & msg);
   
   friend void set_log1_file_path_(const std::string & path_, const std::string & file_name_);
   friend void set_log2_file_path_(const std::string & path_, const std::string & file_name_);
@@ -155,7 +155,7 @@ inline void set_log4_file_path_(const std::string & path_, const std::string & f
 }
 
 // return value: 0 in success, 2 in failure
-inline int excep_log_(const std::string & msg)
+inline int log_1_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log{std::make_unique<logger>(
     std::make_unique<threadsafe_log>(log1_file_path.path, log1_file_path.file_name)) };
@@ -173,7 +173,7 @@ inline int excep_log_(const std::string & msg)
 }
 
 // return value: 0 in success, 2 in failure
-inline int excep_log_2_(const std::string & msg)
+inline int log_2_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log{ std::make_unique<logger>(
     std::make_unique<threadsafe_log>(log2_file_path.path, log2_file_path.file_name))};
@@ -191,7 +191,7 @@ inline int excep_log_2_(const std::string & msg)
 }
 
 // return value: 0 in success, 2 in failure
-inline int excep_log_3_(const std::string & msg)
+inline int log_3_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log{ std::make_unique<logger>(
     std::make_unique<threadsafe_log>(log3_file_path.path, log3_file_path.file_name))};
@@ -209,7 +209,7 @@ inline int excep_log_3_(const std::string & msg)
 }
 
 // return value: 0 in success, 2 in failure
-inline int excep_log_4_(const std::string & msg)
+inline int log_4_(const std::string & msg)
 {
   static std::unique_ptr<logger> exception_log{ std::make_unique<logger>(
     std::make_unique<threadsafe_log>(log4_file_path.path, log4_file_path.file_name))};
@@ -226,32 +226,32 @@ inline int excep_log_4_(const std::string & msg)
 	return exception_log->write(msg);
 }
 
-// in all excep_log- functions: return value: 0 in success, 2 in failure
+// in all log- functions: return value: 0 in success, 2 in failure
 #ifdef USE_LOG1
-  #define excep_log(x) excep_log_(x)
+  #define log_1(x) log_1_(x)
 #else
-  #define excep_log(x)
+  #define log_1(x)
 #endif
 
 #ifdef USE_LOG2
-  #define excep_log_2(x) excep_log_2_(x)
+  #define log_2(x) log_2_(x)
 #else
-  #define excep_log_2(x)
+  #define log_2(x)
 #endif
 
 #ifdef USE_LOG3
-  #define excep_log_3(x) excep_log_3_(x)
+  #define log_3(x) log_3_(x)
 #else
-  #define excep_log_3(x)
+  #define log_3(x)
 #endif
 
 #ifdef USE_LOG4
-  #define excep_log_4(x) excep_log_4_(x)
+  #define log_4(x) log_4_(x)
 #else
-  #define excep_log_4(x)
+  #define log_4(x)
 #endif
   
-// set the full file path of excep_log loggers. Do this before using them. 
+// set the full file path of log_ loggers. Do this before using them. 
 // If file paths not set they use default filepaths (see cpp file: log1_file_path ...)
 #define set_log1_file_path(x, y)  set_log1_file_path_(x, y)
 #define set_log2_file_path(x, y)  set_log2_file_path_(x, y)
@@ -260,10 +260,10 @@ inline int excep_log_4_(const std::string & msg)
 
 #else
 
-#define excep_log(x)
-#define excep_log_2(x)
-#define excep_log_3(x)
-#define excep_log_4(x)
+#define log_1(x)
+#define log_2(x)
+#define log_3(x)
+#define log_4(x)
 
 #define set_log1_file_path(x, y)  
 #define set_log2_file_path(x, y) 
@@ -364,15 +364,15 @@ class logger {
 #define EXCEPTION_LOG
 
 #ifdef EXCEPTION_LOG
-inline void excep_log_(const std::string & msg)
+inline void log_(const std::string & msg)
 {
 	static logger exception_log( std::make_shared<threadsafe_log>("log", "exceptions"));
 	exception_log.write(msg);
 }
 
-#define excep_log(x) excep_log_(x)
+#define log(x) log_(x)
 #else
-#define excep_log(x)
+#define log(x)
 #endif
 
 #endif // LOGGER_H
