@@ -36,7 +36,6 @@ namespace xmls {
   const std::string ftnode::dbsources::db::PRODUCT{"product"};
   const std::string ftnode::dbsources::db::ID{"id"};
   const std::string ftnode::dbsources::db::CONSTR{"cstr"};
-  //const std::string ftnode::dbsources::db::BEG_TR{"beg_tr"};
   const std::string ftnode::dbsources::db::ISO_LEV{"iso_lev"};
   
   const std::string ftnode::dbsources::db::property::ELEM_NAME{"property"};
@@ -52,9 +51,9 @@ namespace xmls {
   const std::vector<std::unique_ptr<setting>>& xml_settings::get(std::string setting_name) const {
     // TODO: could use mapping here (std::map) instead of if-else s
     static std::vector<std::unique_ptr<setting>> null_setting;
-    if(setting_name == ftnode::dbsources::ELEM_NAME) // DBSOURCES
+    if(setting_name == ftnode::dbsources::ELEM_NAME)
       return db_sources;
-    else if(setting_name == ftnode::endpoint::ELEM_NAME) // ENDPOINT
+    else if(setting_name == ftnode::endpoint::ELEM_NAME)
       return end_point_;
 
     return null_setting;
@@ -66,7 +65,7 @@ namespace xmls {
 
     if (xmlDoc.LoadFile(file_name.c_str()))	{
       // XML root
-      xml = xmlDoc.FirstChild(ftnode::ELEM_NAME.c_str()); // SETTING_XML_HOME
+      xml = xmlDoc.FirstChild(ftnode::ELEM_NAME.c_str());
 
       if (NULL == xml)
         return false;
@@ -97,11 +96,11 @@ namespace xmls {
     const std::string elemValue = elem->Value();
 
     TiXmlNode* ret = nullptr;
-    if(elemValue == ftnode::dbsources::ELEM_NAME) { //  DBSOURCES
+    if(elemValue == ftnode::dbsources::ELEM_NAME) {
       proc_db_sources(node);
       ret = nullptr;
     }
-    else if (elemValue == ftnode::endpoint::ELEM_NAME) { // ENDPOINT
+    else if (elemValue == ftnode::endpoint::ELEM_NAME) {
       proc_end_point(node);
       ret = nullptr;
     }
@@ -120,10 +119,8 @@ namespace xmls {
     while (child && !error)	{
       TiXmlElement* elem = child->ToElement();
       elemValue = elem->Value();
-      error = (elemValue != ftnode::dbsources::db::property::ELEM_NAME); // xmls::db::PROPERTY
+      error = (elemValue != ftnode::dbsources::db::property::ELEM_NAME); 
       if(!error) {
-//        std::string name = elem->Attribute(xmls::ftnode_mw_dbsources_db_property::NAME.c_str());
-//        std::string value = elem->Attribute(xmls::ftnode_mw_dbsources_db_property::VALUE.c_str());
         std::string name = elem->Attribute(ftnode::dbsources::db::property::NAME.c_str());
         std::string value = elem->Attribute(ftnode::dbsources::db::property::VALUE.c_str());
         
@@ -141,7 +138,7 @@ namespace xmls {
     while (child && !error)	{
       TiXmlElement* elem = child->ToElement();
       elemValue = elem->Value();
-      error = (elemValue != ftnode::dbsources::db::ELEM_NAME); // xmls::dbsources::DB
+      error = (elemValue != ftnode::dbsources::db::ELEM_NAME); 
       if(!error) {
         std::unique_ptr<db_source> source = std::make_unique<db_source>();
 
@@ -152,7 +149,6 @@ namespace xmls {
         source->user = elem->Attribute(ftnode::dbsources::db::USER.c_str());
         source->name = elem->Attribute(ftnode::dbsources::db::NAME.c_str());
         source->conn_str = elem->Attribute(ftnode::dbsources::db::CONSTR.c_str());
-        //source->begin_tr = elem->Attribute(ftnode::dbsources::db::BEG_TR.c_str());
         source->iso_level = elem->Attribute(ftnode::dbsources::db::ISO_LEV.c_str());
         elem->Attribute(ftnode::dbsources::db::ID.c_str(), &(source->id));
         
@@ -168,8 +164,6 @@ namespace xmls {
   void xml_settings::proc_end_point(TiXmlNode* end_point_node) {
     TiXmlElement* elem = end_point_node->ToElement();
     std::unique_ptr<end_point> _end_point = std::make_unique<end_point>();
-//    elem->Attribute(xmls::ftnode_mw_endpoint::PORT.c_str(), &(_end_point->port));
-//    _end_point->ip = elem->Attribute( xmls::ftnode_mw_endpoint::IP.c_str());
     elem->Attribute(ftnode::endpoint::PORT.c_str(), &(_end_point->port));
     _end_point->ip = elem->Attribute( ftnode::endpoint::IP.c_str());
 

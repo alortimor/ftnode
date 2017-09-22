@@ -26,7 +26,7 @@ void db_service::stop() {
 }
 
 void db_service::operator()() {
-  thread_pool tp{12};
+  thread_pool tp{12}; // 12
   db_buffer dbf(200); // 100
 
   db_buffer * dbf_ptr = &dbf;
@@ -35,7 +35,6 @@ void db_service::operator()() {
   do {
     auto tcp_sess = tcp_sess_q.pop_unique();
     int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
-
     rq = dbf.get_request(rq_id);
     //log_1("Req ID- " + std::to_string(rq_id) + " after dbf.get_request");
     tp.run_job( [rq, dbf_ptr ]() { rq->process_request(); if (rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });

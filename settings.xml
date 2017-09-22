@@ -29,7 +29,7 @@
     <property name="concat_col_suffix" value=") t where 0=1"/>
     <property name="date_fmt_prefix" value=" to_char("/>
     <property name="date_fmt_suffix" value=",'yyyymmdd')"/>
-    <property name="asynch_hash" value="N"/>
+    <property name="asynch_hash" value="Y"/>
     <property name="beg_tr1" value="select 1 from dual"/>
     <property name="beg_tr2" value=""/>
   </db>

@@ -9,6 +9,7 @@
 #include "logger.h"
 #include "sql_grain.h"
 
+
 extern logger exception_log;
 class db_adjudicator;
 
@@ -77,6 +78,8 @@ class db_executor {
                                 // the select to generate the hash is run asynchronously 
     const db_info& get_db_info() const;
 };
+
+
 
 #endif
 

@@ -68,4 +68,5 @@ class db_adjudicator {
 
     void process_request(); // called in a lambda (run in a boost thread) in db_service, serves as  entry point for kickstarting a client request
 };
+
 #endif

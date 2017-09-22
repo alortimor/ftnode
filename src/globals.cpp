@@ -6,5 +6,5 @@
 
 void global_init() {
   settings().load_settings_xml(xmls::DEF_SETTING_FILE_NAME);
-  //set_log3_file_path("test_log", "test");
+  set_log2_file_path("benchmark", "benchmark");
 }

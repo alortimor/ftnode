@@ -14,6 +14,7 @@ tcp_acceptor::tcp_acceptor(asio::io_service& ios, unsigned short port, db_servic
     ,db_service_{_db_service} {  }
 
 void tcp_acceptor::start() {
+  log_1("tcp_acceptor::start()");
   acc.listen();
   initialise();
 }

@@ -153,7 +153,6 @@ void db_adjudicator::execute_request() {
 }
 
 void db_adjudicator::process_request() {
-  log_3("process_request");
   std::string msg;
   unsigned short msg_cnt{0};
   db_session_completed=false;
@@ -203,6 +202,7 @@ void db_adjudicator::process_request() {
         db_session_completed=true;
         msg_cnt=0;
         tcp_sess->client_response(DISCONNECTED + "\n");
+        
         return; // once process_request is complete, db_buffer.make_inactive is run, which elegantly cleans memory 
     }
     else if (msg==SOCKET_ERROR) {
@@ -278,7 +278,7 @@ void db_adjudicator::start_session(std::unique_ptr<tcp_session>&& sess) {
   //log_1("Req ID: " + std::to_string(req_id) + " TCP Session started");
 }
 
-void db_adjudicator::stop_session() { tcp_sess =nullptr;}
+void db_adjudicator::stop_session() { tcp_sess = nullptr; }
 
 void db_adjudicator::disconnect() {
   for ( auto & d : v_dg )

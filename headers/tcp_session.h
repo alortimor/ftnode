@@ -19,18 +19,18 @@ class tcp_session {
 public:
   tcp_session(std::shared_ptr<asio::ip::tcp::socket>);
   void start();
-  void stop();
+  //void stop();
   void client_response(const std::string&);
   std::string get_client_msg();
   const long  get_session_id() const;
-
+  
 private:
   void action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred);
   //void read_handler(const boost::system::error_code& ec, std::size_t bytes_transferred);
   void read_handler();
 
   // stop performs the cleanup.
-  void stop_session();
+  //void stop_session();
 
   std::string req_to_str(std::size_t bytes_transferred);
   std::shared_ptr<asio::ip::tcp::socket> m_sock;

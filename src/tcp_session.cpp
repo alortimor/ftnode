@@ -12,6 +12,7 @@ tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock) : m_sock{s
 }
 
 void tcp_session::start() {
+  log_1("tcp_session::start() "+ std::to_string(session_id));
   read_handler();
 }
 
@@ -19,7 +20,7 @@ const long  tcp_session::get_session_id() const {
   return session_id;
 }
 
-void tcp_session::stop() {
+/*void tcp_session::stop() {
   if(m_sock) {
     boost::system::error_code ec;
     m_sock->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
@@ -29,11 +30,13 @@ void tcp_session::stop() {
   else {
     log_1("tcp_session::stop: Warning - m_sock is null");
   }
-}
+}*/
 
 void tcp_session::client_response(const std::string & msg) {
+  log_1("To client: " + msg);
   // Initiate asynchronous write operation.
   std::string buf = msg + "\n"; // needs to have \n at the end - message format
+  //asio::write(*m_sock.get(), asio::buffer(buf));
   asio::async_write(*m_sock.get(),
       asio::buffer(buf), [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {
         if (ec != 0) {
@@ -50,12 +53,14 @@ std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
 }
 
 void tcp_session::action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred) {
+  log_1("tcp_session::action_msg_received");
   if (ec != 0) {
     msg_q.push(SOCKET_ERROR);
     cv_sess.notify_one();
-    stop_session();
+    //stop_session();
     return;
   }
+  
   socket_msg = req_to_str(bytes_transferred); 
   msg_q.push(socket_msg);  // push onto queue that is read from db_adjudicator
   cv_sess.notify_one();
@@ -65,6 +70,7 @@ void tcp_session::action_msg_received(const boost::system::error_code& ec, std::
 }
 
 void tcp_session::read_handler() {
+  log_1("tcp_session::read_handler()");
   asio::async_read_until(*m_sock.get(), m_request, '\n',
       [this](const boost::system::error_code& ec,
           std::size_t bytes_transferred) {
@@ -74,10 +80,10 @@ void tcp_session::read_handler() {
   );
 }
 
-void tcp_session::stop_session() {
+/*void tcp_session::stop_session() {
   log_1("Stop Session "+ std::to_string(session_id));
   stop();
-}
+}*/
 
 // this is called from db_adjudicator class, once the request has been activated
 // and is continually read until the request has been finalised.
@@ -89,7 +95,7 @@ std::string tcp_session::get_client_msg() {
     msg = msg_q.front();
     msg_q.pop();
   }
-  // log_1("TCP_SESSION Queue message read " + msg);
+
   return msg;
 }
 
