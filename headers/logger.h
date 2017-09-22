@@ -79,7 +79,14 @@ class logger {
 
 ///////////////////////////////////////////////////////////////////////////////////
 /*
- Here define which loggers you want to use. Comment out the loggers
+ To use logger 1:
+ log_1("Hello from logger 1"); 
+ To use logger 2:
+ log_2("Hello from logger 2");
+ 
+ TO SET UP LOGGERS: 
+ ------------------
+ Define which loggers you want to use in the #define-section. Comment out the loggers
  you do not want to use/compile. If for example USE_LOG1 is commented out 
  then log() is not compiled at all in the code.
  USE_EXCEPTION_LOG: generally use loggers. If no loggers used, comment this out.
