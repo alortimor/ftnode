@@ -119,6 +119,8 @@ class logger {
  
  and before using any loggers (maybe in your global_init() function):
  set_log2_file_path("benchmark", "benchmark");
+ In this example we do not need to call set_log1_file_path because we wanted
+ to use its default file values.
  // end of example 3
 */
 
