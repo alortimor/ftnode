@@ -9,7 +9,6 @@
 // Accepts network connections and moves socket to TCP Service, which forms part of the request
 // that lives in the buffer
 
-
 using namespace boost;
 
 class db_service;
@@ -20,7 +19,7 @@ class tcp_acceptor {
     void add_session_to_buffer(const boost::system::error_code&, std::shared_ptr<asio::ip::tcp::socket>);
     asio::io_service& m_ios;
     asio::ip::tcp::acceptor acc;
-    std::atomic<bool> not_accepting;
+    std::atomic<bool> accept_cons; // not_accepting
     db_service* db_service_{nullptr};
     
     std::unique_ptr<tcp_session> session;

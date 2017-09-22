@@ -229,7 +229,6 @@ inline int log_4_(const std::string & msg)
   #define log_2(x)
 #endif
 
-// ERROR: CHANGE log_1_ BACK TO 3
 #ifdef USE_LOG3
   #define log_3(x) log_3_(x)  
 #else

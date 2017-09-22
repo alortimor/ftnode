@@ -7,12 +7,13 @@
 std::atomic<long> tcp_session::atomic_sess_id{0};
 
 tcp_session::tcp_session(std::shared_ptr<asio::ip::tcp::socket> sock) : m_sock{sock} {
-  atomic_sess_id++;
+  ++atomic_sess_id;
   session_id =  atomic_sess_id.load();
+  // start time stamp for this session
+  log_2(std::to_string(session_id));
 }
 
 void tcp_session::start() {
-  log_1("tcp_session::start() "+ std::to_string(session_id));
   read_handler();
 }
 
@@ -33,7 +34,6 @@ const long  tcp_session::get_session_id() const {
 }*/
 
 void tcp_session::client_response(const std::string & msg) {
-  log_1("To client: " + msg);
   // Initiate asynchronous write operation.
   std::string buf = msg + "\n"; // needs to have \n at the end - message format
   //asio::write(*m_sock.get(), asio::buffer(buf));
@@ -53,7 +53,6 @@ std::string tcp_session::req_to_str(std::size_t bytes_transferred) {
 }
 
 void tcp_session::action_msg_received(const boost::system::error_code& ec, std::size_t bytes_transferred) {
-  log_1("tcp_session::action_msg_received");
   if (ec != 0) {
     msg_q.push(SOCKET_ERROR);
     cv_sess.notify_one();
@@ -70,7 +69,6 @@ void tcp_session::action_msg_received(const boost::system::error_code& ec, std::
 }
 
 void tcp_session::read_handler() {
-  log_1("tcp_session::read_handler()");
   asio::async_read_until(*m_sock.get(), m_request, '\n',
       [this](const boost::system::error_code& ec,
           std::size_t bytes_transferred) {

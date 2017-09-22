@@ -20,7 +20,7 @@ void ftnode_mw::start() {
   std::thread db_service_thread(std::ref(_db_service));
 
   // endpoint has only one element at position 0
-  auto _end_point = settings().get(xmls::ftnode::endpoint::ELEM_NAME).at(0).get(); // xmls::ftnode_mw::ENDPOINT
+  auto _end_point = settings().get(xmls::ftnode::endpoint::ELEM_NAME).at(0).get();
   const unsigned short port_num = static_cast<xmls::end_point*>(_end_point)->port;
   try {
     unsigned int thread_pool_size = std::thread::hardware_concurrency()*2;
@@ -29,10 +29,7 @@ void ftnode_mw::start() {
     while(input_str != "q" && input_str != "Q") {
       std::cin >> input_str;
       if(input_str == "q" || input_str == "Q")
-      {
         _db_service.stop();
-      }
-      log_1(input_str);
     }
 
     db_service_thread.join();

@@ -12,7 +12,6 @@ db_buffer::db_buffer(int buffer_size) : size{buffer_size} , slots_free{buffer_si
   const auto& xml_db_sources = settings().get(xmls::ftnode::dbsources::ELEM_NAME);
   const int db_count = static_cast<int>(xml_db_sources.size());
 
-  log_1( "After reading xml file - DB Count " + std::to_string(db_count) );
   for (int i{0}; i<buffer_size; i++) {
     auto elem = request_buffer.emplace(Key{i}, std::make_unique<db_adjudicator>(i, db_count) );
     elem.first->second->initialize(); // call immediately after request construction
@@ -67,7 +66,6 @@ bool db_buffer::make_inactive (const int req_id) {
     //request_buffer.at({req_id})->stop_session();
     request_buffer.at({req_id})->disconnect();
     slots_free++;
-    log_1("REQ ID " + std::to_string(req_id) + " set inactive");
   }
   cv_stack.notify_one();
   return true;
@@ -86,7 +84,6 @@ int db_buffer::make_active (std::unique_ptr<tcp_session>&& tcp_sess) {
     request_buffer.at({rq_id})->make_connection();
     request_buffer.at({rq_id})->set_active(true);
     request_buffer.at({rq_id})->start_session(std::move(tcp_sess));
-    log_1("REQ ID " + std::to_string(rq_id) + " set active ");
   }
   return rq_id;
 }
