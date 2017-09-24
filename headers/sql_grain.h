@@ -3,7 +3,8 @@
 #include <string>
 #include <vector>
 
-// vector of SQL Grain is held in each DB Executor
+// vector of SQL_Grain is held in each DB_Executor class
+
 class sql_grain {
   private:
     int  statement_id{0};

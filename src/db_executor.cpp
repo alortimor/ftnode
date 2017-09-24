@@ -176,9 +176,13 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   return concat_str;
 }
 
-void db_executor::exec_sql() {
+void db_executor::exec_sql(const std::string & sql) {
   try {
-    cmd->Execute();
+    if (sql.size()>0) {
+      cmd_hash->Execute();
+      cmd->Execute();
+      cmd_sel->Execute();
+    }
   }
   catch (SAException &x) {
     failure_msg = "FAILURE EXEC SQL Error: " + std::string( (const char*)x.ErrText() );
