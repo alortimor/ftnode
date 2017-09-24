@@ -158,7 +158,7 @@ void db_adjudicator::process_request() {
   while (!db_session_completed) {
     msg = "";
     msg = tcp_sess->get_client_msg();
-    rtrim(msg, '\n');
+    rtrim(msg, SOCKET_MSG_END_CHAR); // '\n'
 
     if (msg==COMMIT && verify_completed) {
         if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
@@ -168,7 +168,7 @@ void db_adjudicator::process_request() {
             rolled_back=false;
             verify_completed=false;
             comparator_pass=false;
-            tcp_sess->client_response(COMMITED+"\n");
+            tcp_sess->client_response(COMMITED + SOCKET_MSG_END_CHAR); // "\n"
           }
           else {
             rollback_request();
@@ -176,7 +176,7 @@ void db_adjudicator::process_request() {
             rolled_back=true;
             verify_completed=false;
             comparator_pass=false;
-            tcp_sess->client_response(ROLLED_BACK + "\n");
+            tcp_sess->client_response(ROLLED_BACK + SOCKET_MSG_END_CHAR); // "\n"
           }
         }
         msg_cnt=0;
@@ -187,7 +187,7 @@ void db_adjudicator::process_request() {
         verify_completed=false;
         committed=false;
         comparator_pass=false;
-        tcp_sess->client_response(ROLLED_BACK + "\n");
+        tcp_sess->client_response(ROLLED_BACK + SOCKET_MSG_END_CHAR); // "\n"
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
@@ -201,7 +201,7 @@ void db_adjudicator::process_request() {
         // stop time stamp for this session
         if(tcp_sess)
           log_2(std::to_string(tcp_sess->get_session_id()));
-        tcp_sess->client_response(DISCONNECTED + "\n");
+        tcp_sess->client_response(DISCONNECTED + SOCKET_MSG_END_CHAR); // "\n"
         
         return; // once process_request is complete, db_buffer.make_inactive is run, which elegantly cleans memory 
     }
@@ -315,11 +315,11 @@ void db_adjudicator::handle_failure(const std::string & err) {
 
   if ( err==COMPARATOR_FAIL )  {
     log_1(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");
-    tcp_sess->client_response(COMPARATOR_FAIL + "\n");
+    tcp_sess->client_response(COMPARATOR_FAIL + SOCKET_MSG_END_CHAR); // "\n"
   }
   else {
     log_1(std::to_string(tcp_sess->get_session_id()) + " FAILURE " + err);
-    tcp_sess->client_response(FAILURE + " Transaction rolled back " + err + "\n");
+    tcp_sess->client_response(FAILURE + " Transaction rolled back " + err + SOCKET_MSG_END_CHAR); // "\n"
   }
 
   committed=false;

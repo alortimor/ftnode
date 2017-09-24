@@ -1,4 +1,5 @@
 #include "tcp_server.h"
+#include "logger.h"
 
 // TCP Server, manager over acceptor
 
@@ -18,6 +19,8 @@ void tcp_server::start(unsigned short port, unsigned short thread_pool_size) {
     std::unique_ptr<std::thread> th( new std::thread([this]() { m_ios.run(); } ) );
     m_thread_pool.push_back(std::move(th));
   }
+  // the server is almost ready so print a log message
+  log_1("Server started");
 }
 
 void tcp_server::stop() {

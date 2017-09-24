@@ -35,7 +35,7 @@ const long  tcp_session::get_session_id() const {
 
 void tcp_session::client_response(const std::string & msg) {
   // Initiate asynchronous write operation.
-  std::string buf = msg + "\n"; // needs to have \n at the end - message format
+  std::string buf = msg + SOCKET_MSG_END_CHAR; // "\n" needs to have \n at the end - message format
   //asio::write(*m_sock.get(), asio::buffer(buf));
   asio::async_write(*m_sock.get(),
       asio::buffer(buf), [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {
@@ -69,7 +69,7 @@ void tcp_session::action_msg_received(const boost::system::error_code& ec, std::
 }
 
 void tcp_session::read_handler() {
-  asio::async_read_until(*m_sock.get(), m_request, '\n',
+  asio::async_read_until(*m_sock.get(), m_request, SOCKET_MSG_END_CHAR, // '\n'
       [this](const boost::system::error_code& ec,
           std::size_t bytes_transferred) {
               // log_1("Before action " + std::to_string(bytes_transferred) + " " + std::to_string(ec.value()) );

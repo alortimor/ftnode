@@ -16,12 +16,7 @@ public:
 protected:
 
 private:
-  // working objects. You change which object you want to use
-  // by assigning other values to these pointers.
-  tcp_server* tcp_server_{nullptr};
-
-  // default objects - used by default when the object is created
-  std::unique_ptr<tcp_server> def_tcp_server_;
+  std::unique_ptr<tcp_server> tcp_srv;
 };
 
 
