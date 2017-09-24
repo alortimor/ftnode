@@ -179,6 +179,9 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
 void db_executor::exec_sql(const std::string & sql) {
   try {
     if (sql.size()>0) {
+      cmd->setCommandText(sql.c_str());
+      cmd_sel->setCommandText(sql.c_str());
+      cmd_hash->setCommandText(sql.c_str());
       cmd_hash->Execute();
       cmd->Execute();
       cmd_sel->Execute();
