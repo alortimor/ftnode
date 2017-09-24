@@ -40,7 +40,7 @@ void tcp_session::client_response(const std::string & msg) {
   asio::async_write(*m_sock.get(),
       asio::buffer(buf), [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {
         if (ec != 0) {
-          log_1("Socket Write Error " + std::to_string(ec.value()) + ": " + ec.message());
+          log_err("Socket Write Error " + std::to_string(ec.value()) + ": " + ec.message());
         }  
       });
 }

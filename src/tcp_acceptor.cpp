@@ -10,7 +10,6 @@ extern logger exception_log;
 tcp_acceptor::tcp_acceptor(asio::io_service& ios, unsigned short port, db_service* _db_service) :
      m_ios(ios)
     ,acc(m_ios, asio::ip::tcp::endpoint(asio::ip::address_v4::any(), port))
-    //,not_accepting(false)
     ,accept_cons(true)
     ,db_service_{_db_service} {  }
 
@@ -20,7 +19,6 @@ void tcp_acceptor::start() {
 }
 
 void tcp_acceptor::stop() {
-  //not_accepting.store(true);
   accept_cons.store(false);
 }
 
@@ -35,9 +33,8 @@ void tcp_acceptor::add_session_to_buffer(const boost::system::error_code&ec, std
     db_service_->add_request(std::move(session)); // move to db buffer
   }
   else
-      log_1("Error code = " + std::to_string(ec.value()) + ": " + ec.message());
+      log_err("Error code = " + std::to_string(ec.value()) + ": " + ec.message());
 
-  //if (!not_accepting.load())
   if (accept_cons.load())
     initialise();
   else

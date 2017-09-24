@@ -4,6 +4,8 @@
 #include "globals.h"
 #include "xml_settings.h"
 #include "logger.h"
+#include "constants.h"
+#include "globals.h"
 
 void ftnode_mw::start() {
   db_service _db_service; 
@@ -12,7 +14,8 @@ void ftnode_mw::start() {
 
   if(tcp_srv == nullptr) {
     log_err("No tcp server");
-    return; // 2
+    throw ftnode_exception(ERR_TCP_FAILURE);
+    //return ERR_TCP_FAILURE;
   }
 
   std::thread db_service_thread(std::ref(_db_service));
@@ -35,7 +38,7 @@ void ftnode_mw::start() {
   }
   catch (system::system_error&e) {
     std::cerr << e.what();
-    log_1(e.what());
+    log_err(e.what());
   }
 }
 

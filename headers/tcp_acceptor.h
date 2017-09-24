@@ -19,7 +19,7 @@ class tcp_acceptor {
     void add_session_to_buffer(const boost::system::error_code&, std::shared_ptr<asio::ip::tcp::socket>);
     asio::io_service& m_ios;
     asio::ip::tcp::acceptor acc;
-    std::atomic<bool> accept_cons; // not_accepting
+    std::atomic<bool> accept_cons;
     db_service* db_service_{nullptr};
     
     std::unique_ptr<tcp_session> session;

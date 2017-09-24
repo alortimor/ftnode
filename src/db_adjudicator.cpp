@@ -127,6 +127,7 @@ void db_adjudicator::start_request() {
     }
     catch (SAException &x) {
       failure_msg = "EXEC SQL Error: " + std::string( (const char*)x.ErrText() );
+      log_err(failure_msg);
       throw std::runtime_error(failure_msg);
     }
   }
@@ -144,6 +145,7 @@ void db_adjudicator::execute_request() {
       fut.get();
   }
   catch (const std::exception& e) { 
+    log_err("execute_request: " + e.what());
     throw std::runtime_error(e.what());
   }
   verify_request();
@@ -314,11 +316,11 @@ void db_adjudicator::handle_failure(const std::string & err) {
   //}
 
   if ( err==COMPARATOR_FAIL )  {
-    log_1(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");
+    log_err(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");
     tcp_sess->client_response(COMPARATOR_FAIL + SOCKET_MSG_END_CHAR); // "\n"
   }
   else {
-    log_1(std::to_string(tcp_sess->get_session_id()) + " FAILURE " + err);
+    log_err(std::to_string(tcp_sess->get_session_id()) + " FAILURE " + err);
     tcp_sess->client_response(FAILURE + " Transaction rolled back " + err + SOCKET_MSG_END_CHAR); // "\n"
   }
 

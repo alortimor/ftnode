@@ -15,11 +15,24 @@
 #include "./headers/tcp_acceptor.h"
 
 int main() {
-  // initalize all global variables
-  global_init();
-  
-  ftnode_mw ftn_middle_ware;
-  ftn_middle_ware.start();
+  try {
+    // initalize all global variables
+    global_init();
+    
+    ftnode_mw ftn_middle_ware;
+    ftn_middle_ware.start();
+  }
+  catch (const ftnode_exception& e) {
+    //std::cout << e.get_err_code();
+    return e.get_err_code();
+  }
+  catch (const std::exception& e) {
+    //std::cout << e.what();
+    return 1; // general error
+  }  
+  catch ( ... ) {
+    return 1; // general error
+  }
 
   return 0;
 }

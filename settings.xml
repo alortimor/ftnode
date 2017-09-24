@@ -33,6 +33,22 @@
     <property name="beg_tr1" value="select 1 from dual"/>
     <property name="beg_tr2" value=""/>
   </db>
+  <db id="2" product="sqlanywhere" name="ftnode" user="sadb" pwd="sadb" port="5432" host="10.11.12.6" cstr="links=tcpip(host=10.11.12.10;port=2638);databasename=ftnode_sa;servername=ftnode_db" iso_lev="server_specific">
+    <property name="hash_prefix" value="select hash(list(hash_val,'' order by hash_val),'MD5') as hash_val from (select hash("/>
+    <property name="hash_mid" value=",'MD5') as hash_val from ("/>
+    <property name="hash_suffix" value=") as ht) as ht"/>
+    <property name="number_scale_fmt_prefix" value=" replace ( trim ( replace ( string ("/>
+    <property name="number_scale_fmt_mid" value=""/>
+    <property name="number_scale_fmt_suffix" value="), '0', ' ' ) ), ' ', '0' )"/>
+    <property name="apply_number_format_mask" value="false"/>
+    <property name="concat_col_prefix" value="select t.* from ("/>
+    <property name="concat_col_suffix" value=") as t where 0=1"/>
+    <property name="date_fmt_prefix" value=" dateformat("/>
+    <property name="date_fmt_suffix" value=",'yyyymmdd')"/>
+    <property name="asynch_hash" value="N" />
+    <property name="beg_tr1" value="SET TEMPORARY OPTION isolation_level = 'snapshot'"/>
+    <property name="beg_tr2" value="select 1"/>
+  </db>
 </dbsources>
 <endpoint ip="127.0.0.1" port="3333"/>
 </ftnode_mw>
