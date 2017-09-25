@@ -161,6 +161,7 @@ void db_adjudicator::process_request() {
     msg = "";
     msg = tcp_sess->get_client_msg();
     rtrim(msg, SOCKET_MSG_END_CHAR); // '\n'
+    log_1("Client msg: " + msg + "\n");
 
     if (msg==COMMIT && verify_completed) {
         if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
@@ -220,6 +221,7 @@ void db_adjudicator::process_request() {
 
         try {
           execute_request();
+          log_1("Msg: " + msg + " executed");
         }
         catch(std::exception & e ) {
           handle_failure(e.what());
@@ -311,9 +313,9 @@ void db_adjudicator::make_connection() {
 
 void db_adjudicator::handle_failure(const std::string & err) {
   // issue rollback first-off before anything else
-  if ( (!committed) && (!rolled_back) ) {
-    rollback_request();
-  }
+  //if ( (!committed) && (!rolled_back) ) {
+  //  rollback_request();
+  //}
 
   if ( err==COMPARATOR_FAIL )  {
     log_err(std::to_string(tcp_sess->get_session_id()) + " COMPARATOR_FAIL");

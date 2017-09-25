@@ -5,9 +5,9 @@
     <property name="hash_prefix" value="select md5(string_agg(ht.hash_val,'')) as hash_val from (select md5("/>
     <property name="hash_mid" value=") as hash_val from ("/>
     <property name="hash_suffix" value=") as ht order by hash_val) as ht"/>
-    <property name="number_scale_fmt_prefix" value=" to_char("/>
-    <property name="number_scale_fmt_mid" value=", 'FM"/>
-    <property name="number_scale_fmt_suffix" value="')"/>
+    <property name="number_scale_fmt_prefix" value="trim(to_char("/>
+    <property name="number_scale_fmt_mid" value=",'FM"/>
+    <property name="number_scale_fmt_suffix" value="'),'0')"/>
     <property name="apply_number_format_mask" value="true"/>
     <property name="concat_col_prefix" value="select t.* from ("/>
     <property name="concat_col_suffix" value=") as t where 0=1"/>
@@ -21,9 +21,9 @@
     <property name="hash_prefix" value="select lower(rawtohex(dbms_crypto.hash(utl_raw.cast_to_raw(agg_hash_val),2))) as hash_val from (select listagg(hash_val,'') within group (order by 1) as agg_hash_val from (select lower(rawtohex(dbms_crypto.hash (utl_raw.cast_to_raw("/>
     <property name="hash_mid" value="),2) )) as hash_val from ("/>
     <property name="hash_suffix" value=") ) )"/>
-    <property name="number_scale_fmt_prefix" value=" to_char("/>
-    <property name="number_scale_fmt_mid" value=", 'FM"/>
-    <property name="number_scale_fmt_suffix" value="')"/>
+    <property name="number_scale_fmt_prefix" value="trim('0' from to_char("/>
+    <property name="number_scale_fmt_mid" value=",'FM"/>
+    <property name="number_scale_fmt_suffix" value="'))"/>
     <property name="apply_number_format_mask" value="true"/>
     <property name="concat_col_prefix" value="select t.* from ("/>
     <property name="concat_col_suffix" value=") t where 0=1"/>

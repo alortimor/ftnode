@@ -66,6 +66,7 @@ void db_executor::execute_hash_select(int statement_id) {
   try {
     hash_sql = dbi.properties.at("hash_prefix") + generate_concat_columns(v_sg.at(statement_id).get_sql()) 
                   + dbi.properties.at("hash_mid") + v_sg.at(statement_id).get_sql() + dbi.properties.at("hash_suffix");
+    log_1("DB_ID " + std::to_string(db_id) + " " + hash_sql +"\n");
     cmd_hash->setCommandText(hash_sql.c_str());
   }
   catch (SAException &x) {
@@ -132,12 +133,20 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     throw std::runtime_error(failure_msg);
   }
 
-  std::string concat_str {"''||"};
+  std::string concat_str {""};
   std::string fmt {""};
   std::string field_name;
   
   // using the information related to data types, we can now generated a concatenated string
   // that can be hashed
+  bool is_single {false};
+  if (cmd_hash->FieldCount()==1) {
+      concat_str ="'0'||";
+      is_single=true;
+    }
+    else
+      concat_str="";
+
   for (int i{1}; i <= cmd_hash->FieldCount(); i++) {
     field_name = (const char*)cmd_hash->Field(i).Name();
     try {
@@ -172,7 +181,10 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     }
   }
   // strip off trailing concat operators prior to returning.
-  concat_str += "''";
+  if (is_single)
+    concat_str += "'0'";
+  else
+    rtrim(concat_str,'|');
   return concat_str;
 }
 
@@ -190,6 +202,8 @@ void db_executor::exec_sql(const std::string & sql) {
   catch (SAException &x) {
     failure_msg = "FAILURE EXEC SQL Error: " + std::string( (const char*)x.ErrText() );
     cmd->Cancel();
+    cmd_sel->Cancel();
+    cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
