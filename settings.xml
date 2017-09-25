@@ -16,6 +16,7 @@
     <property name="asynch_hash" value="Y"/>
     <property name="beg_tr1" value="select 1"/>
     <property name="beg_tr2" value=""/>
+    <property name="for_upd" value=""/>
   </db>
   <db id="1" product="oracle" name="ftnode" user="ordb" pwd="ordb" port="1521" host="10.11.12.18" cstr="//10.11.12.18:1521/ftnode"  iso_lev="SA_Serializable">
     <property name="hash_prefix" value="select lower(rawtohex(dbms_crypto.hash(utl_raw.cast_to_raw(agg_hash_val),2))) as hash_val from (select listagg(hash_val,'') within group (order by 1) as agg_hash_val from (select lower(rawtohex(dbms_crypto.hash (utl_raw.cast_to_raw("/>
@@ -32,6 +33,7 @@
     <property name="asynch_hash" value="Y"/>
     <property name="beg_tr1" value="select 1 from dual"/>
     <property name="beg_tr2" value=""/>
+    <property name="for_upd" value="nowait"/>
   </db>
   <db id="2" product="sqlanywhere" name="ftnode" user="sadb" pwd="sadb" port="49153" host="10.11.12.17" cstr="links=tcpip(host=10.11.12.17;port=49153);databasename=ftnode_sa;servername=ftnode_sa"  iso_lev="server_specific">
     <property name="hash_prefix" value="select hash(list(hash_val,'' order by hash_val),'MD5') as hash_val from (select hash("/>
@@ -48,6 +50,7 @@
     <property name="asynch_hash" value="N"/>
     <property name="beg_tr1" value="SET TEMPORARY OPTION isolation_level = 'snapshot'"/>
     <property name="beg_tr2" value=""/>
+    <property name="for_upd" value=""/>
   </db>
 </dbsources>
 <endpoint ip="127.0.0.1" port="3333"/>

@@ -64,9 +64,13 @@ const std::string db_executor::get_connection_str() const { return dbi.con_str; 
 void db_executor::execute_hash_select(int statement_id) {
   std::string hash_sql;
   try {
-    hash_sql = dbi.properties.at("hash_prefix") + generate_concat_columns(v_sg.at(statement_id).get_sql()) 
-                  + dbi.properties.at("hash_mid") + v_sg.at(statement_id).get_sql() + dbi.properties.at("hash_suffix");
-    log_1("DB_ID " + std::to_string(db_id) + " " + hash_sql +"\n");
+    hash_sql = v_sg.at(statement_id).get_sql();
+    hash_sql = hash_sql.substr(0, hash_sql.find("for update"));
+
+    hash_sql = dbi.properties.at("hash_prefix") + generate_concat_columns(hash_sql) 
+                  + dbi.properties.at("hash_mid") + hash_sql + dbi.properties.at("hash_suffix");
+
+    //log_1("DB_ID " + std::to_string(db_id) + " " + hash_sql +"\n");
     cmd_hash->setCommandText(hash_sql.c_str());
   }
   catch (SAException &x) {
@@ -93,7 +97,12 @@ void db_executor::execute_hash_select(int statement_id) {
 }
 
 void db_executor::execute_select (int statement_id) {
-  cmd_sel->setCommandText(v_sg.at(statement_id).get_sql().c_str());
+  std::string sql {v_sg.at(statement_id).get_sql()};
+  
+  if (!( sql.find("for update") == std::string::npos) )
+    sql += " " +dbi.properties.at("for_upd");
+
+  cmd_sel->setCommandText(sql.c_str());
   try {
     cmd_sel->setOption("UseCursor") = "1";
     cmd_sel->Execute();
@@ -101,7 +110,7 @@ void db_executor::execute_select (int statement_id) {
   }
   catch (SAException &x) {
     cmd_sel->Cancel();
-    failure_msg = "FAILURE SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) + " :" + v_sg.at(statement_id).get_sql();
+    failure_msg = "FAILURE SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) + " :" + sql;
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
