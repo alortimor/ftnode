@@ -369,7 +369,8 @@ void db_executor::execute_sql_grains () {
           s.set_db_return_values(false, cmd->RowsAffected() );
         }
         catch (SAException &x) {
-          failure_msg = "DB Execute error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id) + " " +s.get_sql();
+          failure_msg = "DB Execute error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " 
+                      + std::to_string(db_id) + " " +s.get_sql()   + " " + std::to_string(req.get_session_id()) ;
           cmd->Cancel();
           throw std::runtime_error(failure_msg);
         }

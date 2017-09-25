@@ -74,7 +74,8 @@ void db_executor::execute_hash_select(int statement_id) {
     cmd_hash->setCommandText(hash_sql.c_str());
   }
   catch (SAException &x) {
-    failure_msg =  "FAILURE HASH cols error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " + hash_sql ;
+    failure_msg =  "FAILURE HASH cols error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " 
+                + hash_sql + " " + std::to_string(req.get_session_id()) ;
     cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
@@ -90,7 +91,8 @@ void db_executor::execute_hash_select(int statement_id) {
   }
   catch (SAException &x) {
     cmd_hash->Cancel();
-    failure_msg =  "FAILURE HASH select error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " + hash_sql ;
+    failure_msg =  "FAILURE HASH select error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " 
+                    + hash_sql  + " " + std::to_string(req.get_session_id()) ;
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
@@ -110,7 +112,8 @@ void db_executor::execute_select (int statement_id) {
   }
   catch (SAException &x) {
     cmd_sel->Cancel();
-    failure_msg = "FAILURE SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) + " :" + sql;
+    failure_msg = "FAILURE SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) 
+                  + " :" + sql   + " " + std::to_string(req.get_session_id()) ;
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
@@ -126,7 +129,8 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     cmd_hash->setCommandText(exec_sql.c_str());
   }
   catch (SAException &x) {
-    failure_msg = "FAILURE Generate Cols generate : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+    failure_msg = "FAILURE Generate Cols generate : " + std::string( (const char*)x.ErrText()) 
+                 + " DB ID "+ std::to_string(db_id) + " " + exec_sql + " " + std::to_string(req.get_session_id()) ;
     cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
@@ -136,7 +140,8 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     cmd_hash->Execute(); // executes a dummy statement that performs no fetch, but exposes all columns and data types
   }
   catch (SAException &x) {
-    failure_msg = "FAILURE Generate Cols execute : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+    failure_msg = "FAILURE Generate Cols execute : " + std::string( (const char*)x.ErrText()) 
+               + " DB ID "+ std::to_string(db_id) + " " + exec_sql + " " + std::to_string(req.get_session_id()) ;
     cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
@@ -184,7 +189,8 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     }
     catch (SAException &x) {
       cmd_hash->Cancel();
-      failure_msg = "FAILURE Format Cols Error: " + std::string( (const char*)x.ErrText() )  + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+      failure_msg = "FAILURE Format Cols Error: " + std::string( (const char*)x.ErrText() )  + " DB ID "+ std::to_string(db_id) 
+                    + " " + exec_sql   + " " + std::to_string(req.get_session_id()) ;
       log_err(failure_msg);
       throw std::runtime_error(failure_msg);
     }
