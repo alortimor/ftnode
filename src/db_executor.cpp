@@ -64,12 +64,18 @@ const std::string db_executor::get_connection_str() const { return dbi.con_str; 
 void db_executor::execute_hash_select(int statement_id) {
   std::string hash_sql;
   try {
-    hash_sql = dbi.properties.at("hash_prefix") + generate_concat_columns(v_sg.at(statement_id).get_sql()) 
-                  + dbi.properties.at("hash_mid") + v_sg.at(statement_id).get_sql() + dbi.properties.at("hash_suffix");
+    hash_sql = v_sg.at(statement_id).get_sql();
+    hash_sql = hash_sql.substr(0, hash_sql.find("for update"));
+
+    hash_sql = dbi.properties.at("hash_prefix") + generate_concat_columns(hash_sql) 
+                  + dbi.properties.at("hash_mid") + hash_sql + dbi.properties.at("hash_suffix");
+
+    //log_1("DB_ID " + std::to_string(db_id) + " " + hash_sql +"\n");
     cmd_hash->setCommandText(hash_sql.c_str());
   }
   catch (SAException &x) {
-    failure_msg =  "FAILURE HASH cols error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " + hash_sql ;
+    failure_msg =  "FAILURE HASH cols error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " 
+                + hash_sql + " " + std::to_string(req.get_session_id()) ;
     cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
@@ -85,14 +91,20 @@ void db_executor::execute_hash_select(int statement_id) {
   }
   catch (SAException &x) {
     cmd_hash->Cancel();
-    failure_msg =  "FAILURE HASH select error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " + hash_sql ;
+    failure_msg =  "FAILURE HASH select error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " 
+                    + hash_sql  + " " + std::to_string(req.get_session_id()) ;
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
 }
 
 void db_executor::execute_select (int statement_id) {
-  cmd_sel->setCommandText(v_sg.at(statement_id).get_sql().c_str());
+  std::string sql {v_sg.at(statement_id).get_sql()};
+  
+  if (!( sql.find("for update") == std::string::npos) )
+    sql += " " +dbi.properties.at("for_upd");
+
+  cmd_sel->setCommandText(sql.c_str());
   try {
     cmd_sel->setOption("UseCursor") = "1";
     cmd_sel->Execute();
@@ -100,7 +112,8 @@ void db_executor::execute_select (int statement_id) {
   }
   catch (SAException &x) {
     cmd_sel->Cancel();
-    failure_msg = "FAILURE SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) + " :" + v_sg.at(statement_id).get_sql();
+    failure_msg = "FAILURE SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) 
+                  + " :" + sql   + " " + std::to_string(req.get_session_id()) ;
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
@@ -116,7 +129,8 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     cmd_hash->setCommandText(exec_sql.c_str());
   }
   catch (SAException &x) {
-    failure_msg = "FAILURE Generate Cols generate : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+    failure_msg = "FAILURE Generate Cols generate : " + std::string( (const char*)x.ErrText()) 
+                 + " DB ID "+ std::to_string(db_id) + " " + exec_sql + " " + std::to_string(req.get_session_id()) ;
     cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
@@ -126,18 +140,27 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     cmd_hash->Execute(); // executes a dummy statement that performs no fetch, but exposes all columns and data types
   }
   catch (SAException &x) {
-    failure_msg = "FAILURE Generate Cols execute : " + std::string( (const char*)x.ErrText()) + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+    failure_msg = "FAILURE Generate Cols execute : " + std::string( (const char*)x.ErrText()) 
+               + " DB ID "+ std::to_string(db_id) + " " + exec_sql + " " + std::to_string(req.get_session_id()) ;
     cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
 
-  std::string concat_str {"''||"};
+  std::string concat_str {""};
   std::string fmt {""};
   std::string field_name;
   
   // using the information related to data types, we can now generated a concatenated string
   // that can be hashed
+  bool is_single {false};
+  if (cmd_hash->FieldCount()==1) {
+      concat_str ="'0'||";
+      is_single=true;
+    }
+    else
+      concat_str="";
+
   for (int i{1}; i <= cmd_hash->FieldCount(); i++) {
     field_name = (const char*)cmd_hash->Field(i).Name();
     try {
@@ -166,19 +189,26 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
     }
     catch (SAException &x) {
       cmd_hash->Cancel();
-      failure_msg = "FAILURE Format Cols Error: " + std::string( (const char*)x.ErrText() )  + " DB ID "+ std::to_string(db_id) + " " + exec_sql;
+      failure_msg = "FAILURE Format Cols Error: " + std::string( (const char*)x.ErrText() )  + " DB ID "+ std::to_string(db_id) 
+                    + " " + exec_sql   + " " + std::to_string(req.get_session_id()) ;
       log_err(failure_msg);
       throw std::runtime_error(failure_msg);
     }
   }
   // strip off trailing concat operators prior to returning.
-  concat_str += "''";
+  if (is_single)
+    concat_str += "'0'";
+  else
+    rtrim(concat_str,'|');
   return concat_str;
 }
 
 void db_executor::exec_sql(const std::string & sql) {
   try {
     if (sql.size()>0) {
+      cmd->setCommandText(sql.c_str());
+      cmd_sel->setCommandText(sql.c_str());
+      cmd_hash->setCommandText(sql.c_str());
       cmd_hash->Execute();
       cmd->Execute();
       cmd_sel->Execute();
@@ -187,6 +217,8 @@ void db_executor::exec_sql(const std::string & sql) {
   catch (SAException &x) {
     failure_msg = "FAILURE EXEC SQL Error: " + std::string( (const char*)x.ErrText() );
     cmd->Cancel();
+    cmd_sel->Cancel();
+    cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }

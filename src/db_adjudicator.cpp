@@ -160,6 +160,7 @@ void db_adjudicator::process_request() {
   while (!db_session_completed) {
     msg = "";
     msg = tcp_sess->get_client_msg();
+    //log_1("Client Msg: " + msg + "\n");
     rtrim(msg, SOCKET_MSG_END_CHAR); // '\n'
 
     if (msg==COMMIT && verify_completed) {
@@ -193,6 +194,7 @@ void db_adjudicator::process_request() {
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
+        //log_1("Before rollback in disconnect \n");
         if ( (!committed) && (!rolled_back) ) rollback_request(); // Ensure a rollback occurs for a premature disconnect
         rolled_back=true;
         committed=false;
@@ -202,7 +204,10 @@ void db_adjudicator::process_request() {
         msg_cnt=0;
         // stop time stamp for this session
         if(tcp_sess)
-          log_2(std::to_string(tcp_sess->get_session_id()));
+          //log_2(std::to_string(tcp_sess->get_session_id()));
+          
+        //log_1("Before disconnect response \n");
+
         tcp_sess->client_response(DISCONNECTED + SOCKET_MSG_END_CHAR); // "\n"
         
         return; // once process_request is complete, db_buffer.make_inactive is run, which elegantly cleans memory 
@@ -364,7 +369,8 @@ void db_executor::execute_sql_grains () {
           s.set_db_return_values(false, cmd->RowsAffected() );
         }
         catch (SAException &x) {
-          failure_msg = "DB Execute error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id);
+          failure_msg = "DB Execute error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " 
+                      + std::to_string(db_id) + " " +s.get_sql()   + " " + std::to_string(req.get_session_id()) ;
           cmd->Cancel();
           throw std::runtime_error(failure_msg);
         }
