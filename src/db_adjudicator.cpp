@@ -164,7 +164,7 @@ void db_adjudicator::process_request() {
     rtrim(msg, SOCKET_MSG_END_CHAR); // '\n'
 
     if (msg==COMMIT && verify_completed) {
-        if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
+        if ( (!committed) && (!rolled_back) ) { // verify in case user has sent commit twice
           if (comparator_pass) {
             commit_request();
             committed=true;
