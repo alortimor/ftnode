@@ -83,10 +83,11 @@ void db_executor::execute_hash_select(int statement_id) {
   try {
     cmd_hash->Execute();
     std::string hash_val{""};
-    while (cmd_hash->FetchNext())
+    while (cmd_hash->FetchNext()) {
       hash_val = (const char*)cmd_hash->Field(1).asString();
+      //log_1("Hash value " + hash_val + " size " + std::to_string(hash_val.size()) + " DB_ID " + std::to_string(db_id) );
+    }
     v_sg.at(statement_id).set_hash_val(hash_val);
-
   }
   catch (SAException &x) {
     cmd_hash->Cancel();
@@ -237,6 +238,7 @@ void db_executor::prepare_client_results() {
           rtrim(str, ',');
           v_result.emplace_back(std::make_pair('S', str));
         }
+        if (v_result.size()==0) v_result.emplace_back(std::make_pair('S', ZERO_RESULT)); // FOR  SELECT statement with no return values
       }
       catch (SAException &x) {
         failure_msg = "FAILURE Prepare Client Results Error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id);

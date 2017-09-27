@@ -233,14 +233,18 @@ void db_adjudicator::verify_request() {
         for (int i{0}; i<statement_cnt; ++i) {
           comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i)) && (d1.get_hash(i) == d2.get_hash(i));
           if (!comparator_pass) {
-            failure_msg = "REQ ID " + std::to_string(req_id) + " Session ID: " + std::to_string(tcp_sess->get_session_id()) + " "
-                        + d1.get_hash(i) + " " + d2.get_hash(i) + " " + std::to_string(d1.get_rows_affected(i)) 
-                        + " " + std::to_string(d2.get_rows_affected(i)) + " comprator fail ";
-            break;
+            if ( (d1.get_hash(i) =="d41d8cd98f00b204e9800998ecf8427e" )|| (d2.get_hash(i) == "d41d8cd98f00b204e9800998ecf8427e"))
+              comparator_pass = true;
+            else {
+              failure_msg = "REQ ID " + std::to_string(req_id) + " Session ID: " + std::to_string(tcp_sess->get_session_id()) + " "
+                          + d1.get_hash(i) + " " + d2.get_hash(i) + " " + std::to_string(d1.get_rows_affected(i)) 
+                          + " " + std::to_string(d2.get_rows_affected(i)) + " comprator fail ";
+              break;
+            }
           }
         }
+        if (!comparator_pass) break;
       }
-      if (!comparator_pass) break;
     }
     if (!comparator_pass) break;
   }
@@ -370,6 +374,7 @@ void db_executor::execute_sql_grains () {
     try {
       prepare_client_results();
       const auto & v_result = get_sql_results();
+      //log_1("Result vector " + std::to_string(v_result.size() ));
       req.send_results_to_client(v_result);
     }
     catch (std::exception & e) {
