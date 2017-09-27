@@ -49,7 +49,7 @@
     <property name="date_fmt_suffix" value=",'yyyymmdd')"/>
     <property name="asynch_hash" value="N"/>
     <property name="beg_tr1" value="SET TEMPORARY OPTION isolation_level = 'snapshot'"/>
-    <property name="beg_tr2" value=""/>
+    <property name="beg_tr2" value="select 1"/>
     <property name="for_upd" value=""/>
   </db>
 </dbsources>

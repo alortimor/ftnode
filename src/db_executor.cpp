@@ -76,7 +76,6 @@ void db_executor::execute_hash_select(int statement_id) {
   catch (SAException &x) {
     failure_msg =  "FAILURE HASH cols error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id)+ ": " 
                 + hash_sql + " " + std::to_string(req.get_session_id()) ;
-    cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
@@ -111,7 +110,6 @@ void db_executor::execute_select (int statement_id) {
     v_sg.at(statement_id).set_db_return_values(true,0);
   }
   catch (SAException &x) {
-    cmd_sel->Cancel();
     failure_msg = "FAILURE SELECT error: " +  std::string((const char*)x.ErrText()) + " DB ID " + std::to_string(db_id) 
                   + " :" + sql   + " " + std::to_string(req.get_session_id()) ;
     log_err(failure_msg);
@@ -131,7 +129,6 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   catch (SAException &x) {
     failure_msg = "FAILURE Generate Cols generate : " + std::string( (const char*)x.ErrText()) 
                  + " DB ID "+ std::to_string(db_id) + " " + exec_sql + " " + std::to_string(req.get_session_id()) ;
-    cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
@@ -142,7 +139,6 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   catch (SAException &x) {
     failure_msg = "FAILURE Generate Cols execute : " + std::string( (const char*)x.ErrText()) 
                + " DB ID "+ std::to_string(db_id) + " " + exec_sql + " " + std::to_string(req.get_session_id()) ;
-    cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
@@ -188,7 +184,6 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
       }
     }
     catch (SAException &x) {
-      cmd_hash->Cancel();
       failure_msg = "FAILURE Format Cols Error: " + std::string( (const char*)x.ErrText() )  + " DB ID "+ std::to_string(db_id) 
                     + " " + exec_sql   + " " + std::to_string(req.get_session_id()) ;
       log_err(failure_msg);
@@ -205,7 +200,7 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
 
 void db_executor::exec_sql(const std::string & sql) {
   try {
-    if (sql.size()>0) {
+    if (sql != "") {
       cmd->setCommandText(sql.c_str());
       cmd_sel->setCommandText(sql.c_str());
       cmd_hash->setCommandText(sql.c_str());
@@ -216,9 +211,6 @@ void db_executor::exec_sql(const std::string & sql) {
   }
   catch (SAException &x) {
     failure_msg = "FAILURE EXEC SQL Error: " + std::string( (const char*)x.ErrText() );
-    cmd->Cancel();
-    cmd_sel->Cancel();
-    cmd_hash->Cancel();
     log_err(failure_msg);
     throw std::runtime_error(failure_msg);
   }
@@ -248,7 +240,6 @@ void db_executor::prepare_client_results() {
       }
       catch (SAException &x) {
         failure_msg = "FAILURE Prepare Client Results Error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id);
-        cmd_sel->Cancel();
         log_err(failure_msg);
         throw std::runtime_error(failure_msg);
       }
@@ -292,9 +283,9 @@ bool db_executor::make_connection() {
     }
     catch (SAException &x) {
       failure_msg = "FAILURE Cannot make connection: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id);
-      cmd->Cancel();
-      cmd_hash->Cancel();
-      cmd_sel->Cancel();
+      //cmd->Cancel();
+      //cmd_hash->Cancel();
+      //cmd_sel->Cancel();
       log_err(failure_msg);
       throw std::runtime_error(failure_msg);
     }
