@@ -5,6 +5,7 @@
 #include "db_adjudicator.h"
 #include "logger.h"
 #include "tcp_session.h"
+#include "globals.h"
 
 extern logger exception_log;
 
@@ -298,8 +299,13 @@ void db_adjudicator::set_connection_info(const db_info & dbi) {
 }
 
 void db_adjudicator::make_connection() {
-  for ( auto & d : v_dg ) {
-    if (!d.make_connection()) break;
+  try {
+    for ( auto & d : v_dg ) {
+      if (!d.make_connection()) break;
+    }
+  }
+  catch ( ... ) {
+    throw;
   }
 }
 

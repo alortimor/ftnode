@@ -3,6 +3,7 @@
 #include "db_executor.h"
 #include "logger.h"
 #include "db_adjudicator.h"
+#include "globals.h"
 
 extern logger exception_log;
 
@@ -83,11 +84,10 @@ void db_executor::execute_hash_select(int statement_id) {
   try {
     cmd_hash->Execute();
     std::string hash_val{""};
-    while (cmd_hash->FetchNext()) {
+    while (cmd_hash->FetchNext())
       hash_val = (const char*)cmd_hash->Field(1).asString();
-      //log_1("Hash value " + hash_val + " size " + std::to_string(hash_val.size()) + " DB_ID " + std::to_string(db_id) );
-    }
     v_sg.at(statement_id).set_hash_val(hash_val);
+
   }
   catch (SAException &x) {
     cmd_hash->Cancel();
@@ -238,7 +238,6 @@ void db_executor::prepare_client_results() {
           rtrim(str, ',');
           v_result.emplace_back(std::make_pair('S', str));
         }
-        if (v_result.size()==0) v_result.emplace_back(std::make_pair('S', ZERO_RESULT)); // FOR  SELECT statement with no return values
       }
       catch (SAException &x) {
         failure_msg = "FAILURE Prepare Client Results Error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " + std::to_string(db_id);
@@ -257,10 +256,15 @@ void db_executor::rollback() {
   con->Rollback();
 }
 
+//void foo() {
+  //throw 1;
+  //throw ftnode_exception(57, "foo failure");
+//}
+
 bool db_executor::make_connection() {
   std::string str;
   try {
-
+    //foo();
     if (dbi.product=="sqlanywhere") {
       con->setOption(_TSA("SQLANY.LIBS")) = _TSA("/opt/sqlanywhere17/lib64/libdbcapi_r.so");
     }
@@ -289,11 +293,27 @@ bool db_executor::make_connection() {
       //cmd_hash->Cancel();
       //cmd_sel->Cancel();
       log_err(failure_msg);
-      throw std::runtime_error(failure_msg);
+      //throw std::runtime_error(failure_msg);
+      throw ftnode_exception(ERR_DB_CONNECTION, failure_msg);
+      return false;
     }
   }
   catch (SAException &x) {
-    log_err( "FAILURE Connection error :" + dbi.product + " - " + std::string((const char*)x.ErrText()) );
+    failure_msg = "FAILURE Connection error : " + dbi.product + " - " + std::string((const char*)x.ErrText());
+    log_err( failure_msg );
+    throw ftnode_exception(ERR_DB_CONNECTION, failure_msg);
+    return false;
+  }
+  catch (const std::exception& e) {
+    failure_msg = "FAILURE Connection error : " + dbi.product + " - " + std::string(e.what());
+    log_err( failure_msg );
+    throw ftnode_exception(ERR_DB_CONNECTION, failure_msg);
+    return false;
+  }    
+  catch ( ... ) {
+    failure_msg = "FAILURE Connection error : " + dbi.product;
+    log_err( failure_msg );
+    throw ftnode_exception(ERR_DB_CONNECTION, failure_msg);
     return false;
   }
   return true;

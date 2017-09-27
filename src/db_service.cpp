@@ -11,6 +11,7 @@
 #include "db_buffer.h"
 #include "logger.h"
 #include "xml_settings.h"
+#include "globals.h"
 
 // Manages the Interface between the Adjudicator and the TCP/IP Service
 
@@ -34,9 +35,15 @@ void db_service::operator()() {
 
   do {
     auto tcp_sess = tcp_sess_q.pop_unique();
-    int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
-    rq = dbf.get_request(rq_id);
-    tp.run_job( [rq, dbf_ptr ]() { rq->process_request(); if (rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });
+    try {
+      int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
+      rq = dbf.get_request(rq_id);
+      tp.run_job( [rq, dbf_ptr ]() { rq->process_request(); if (rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });
+    }
+    catch ( ... ) { // const ftnode_exception& e
+      // tp.stop_service(); // destructor will stop the service
+      throw;
+    }
   } while (!stop_process);
 
   tp.stop_service();

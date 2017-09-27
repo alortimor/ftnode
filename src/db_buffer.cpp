@@ -81,9 +81,16 @@ int db_buffer::make_active (std::unique_ptr<tcp_session>&& tcp_sess) {
     slots_free--;
     rq_id = st.top();
     st.pop();
-    request_buffer.at({rq_id})->make_connection();
-    request_buffer.at({rq_id})->set_active(true);
-    request_buffer.at({rq_id})->start_session(std::move(tcp_sess));
+    try {
+      request_buffer.at({rq_id})->make_connection();
+      request_buffer.at({rq_id})->set_active(true);
+      request_buffer.at({rq_id})->start_session(std::move(tcp_sess));
+    }
+    catch ( ... ) {
+      slots_free++;
+      st.push(rq_id);
+      throw;
+    }    
   }
   return rq_id;
 }
