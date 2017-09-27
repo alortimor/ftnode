@@ -108,21 +108,12 @@ bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
 }
 
 void db_adjudicator::start_request() {
-  // Set BEGIN transaction statement.
-  //for ( auto & d : v_dg )
-  //  d.set_statement(d.get_begin_statement());
-
-  // ensure begin transaction is performed exclusively
   {
     std::lock_guard<std::mutex> lk(mx);
     try {
       for ( auto & d : v_dg ) {
         d.exec_sql(d.get_begin_statement());
-//        if( !d.get_db_info().properties.at("beg_tr2").empty() )
-  //      {
-      //    d.set_statement(d.get_db_info().properties.at("beg_tr2")); 
-          d.exec_sql(d.get_db_info().properties.at("beg_tr2"));
-    //    }
+        d.exec_sql(d.get_db_info().properties.at("beg_tr2"));
       }
     }
     catch (SAException &x) {
@@ -160,11 +151,10 @@ void db_adjudicator::process_request() {
   while (!db_session_completed) {
     msg = "";
     msg = tcp_sess->get_client_msg();
-    //log_1("Client Msg: " + msg + "\n");
     rtrim(msg, SOCKET_MSG_END_CHAR); // '\n'
 
     if (msg==COMMIT && verify_completed) {
-        if ( (!committed) || (!rolled_back) ) { // verify in case user has sent commit twice
+        if ( (!committed) && (!rolled_back) ) { // verify in case user has sent commit twice
           if (comparator_pass) {
             commit_request();
             committed=true;
@@ -173,19 +163,13 @@ void db_adjudicator::process_request() {
             comparator_pass=false;
             tcp_sess->client_response(COMMITED + SOCKET_MSG_END_CHAR); // "\n"
           }
-          else {
-            rollback_request();
-            committed=false;
-            rolled_back=true;
-            verify_completed=false;
-            comparator_pass=false;
-            tcp_sess->client_response(ROLLED_BACK + SOCKET_MSG_END_CHAR); // "\n"
-          }
         }
         msg_cnt=0;
     }
     else if (msg==ROLLBACK ) {
-        if ( (!committed) && (!rolled_back) ) rollback_request();
+        if ( (!committed) && (!rolled_back) ) {
+          rollback_request();
+        }
         rolled_back=true;
         verify_completed=false;
         committed=false;
@@ -194,8 +178,9 @@ void db_adjudicator::process_request() {
         msg_cnt=0;
     }
     else if (msg==DISCONNECT ) {
-        //log_1("Before rollback in disconnect \n");
-        if ( (!committed) && (!rolled_back) ) rollback_request(); // Ensure a rollback occurs for a premature disconnect
+        if ( (!committed) && (!rolled_back) )  {
+          rollback_request(); // Ensure a rollback occurs for a premature disconnect
+        }
         rolled_back=true;
         committed=false;
         verify_completed=false;
@@ -203,10 +188,8 @@ void db_adjudicator::process_request() {
         db_session_completed=true;
         msg_cnt=0;
         // stop time stamp for this session
-        if(tcp_sess)
+        //if(tcp_sess)
           //log_2(std::to_string(tcp_sess->get_session_id()));
-          
-        //log_1("Before disconnect response \n");
 
         tcp_sess->client_response(DISCONNECTED + SOCKET_MSG_END_CHAR); // "\n"
         
@@ -220,13 +203,15 @@ void db_adjudicator::process_request() {
     else {
         msg_cnt++;
         create_request(msg, msg_cnt);
-        if ( (msg_cnt==1) || ( (!rolled_back) && (!committed)) )
+        if (msg_cnt==1) {
           start_request(); // only set snapshot if neccessary
+        }
 
         try {
           execute_request();
         }
         catch(std::exception & e ) {
+          log_1(e.what());
           handle_failure(e.what());
           msg_cnt=0;
         }
@@ -248,14 +233,18 @@ void db_adjudicator::verify_request() {
         for (int i{0}; i<statement_cnt; ++i) {
           comparator_pass = (d1.get_rows_affected(i) == d2.get_rows_affected(i)) && (d1.get_hash(i) == d2.get_hash(i));
           if (!comparator_pass) {
-            failure_msg = "REQ ID " + std::to_string(req_id) + " Session ID: " + std::to_string(tcp_sess->get_session_id()) + " "
-                        + d1.get_hash(i) + " " + d2.get_hash(i) + " " + std::to_string(d1.get_rows_affected(i)) 
-                        + " " + std::to_string(d2.get_rows_affected(i)) + " comprator fail ";
-            break;
+            if ( (d1.get_hash(i) =="d41d8cd98f00b204e9800998ecf8427e" )|| (d2.get_hash(i) == "d41d8cd98f00b204e9800998ecf8427e"))
+              comparator_pass = true;
+            else {
+              failure_msg = "REQ ID " + std::to_string(req_id) + " Session ID: " + std::to_string(tcp_sess->get_session_id()) + " "
+                          + d1.get_hash(i) + " " + d2.get_hash(i) + " " + std::to_string(d1.get_rows_affected(i)) 
+                          + " " + std::to_string(d2.get_rows_affected(i)) + " comprator fail ";
+              break;
+            }
           }
         }
+        if (!comparator_pass) break;
       }
-      if (!comparator_pass) break;
     }
     if (!comparator_pass) break;
   }
@@ -330,7 +319,7 @@ void db_adjudicator::handle_failure(const std::string & err) {
   }
 
   committed=false;
-  rolled_back=false;
+  rolled_back=true;
   first_done=false;
   comparator_pass=false;
   verify_completed=false;
@@ -385,6 +374,7 @@ void db_executor::execute_sql_grains () {
     try {
       prepare_client_results();
       const auto & v_result = get_sql_results();
+      //log_1("Result vector " + std::to_string(v_result.size() ));
       req.send_results_to_client(v_result);
     }
     catch (std::exception & e) {

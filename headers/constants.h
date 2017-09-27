@@ -16,6 +16,8 @@ const std::string DISCONNECTED{"DISCONNECTED"};
 const std::string SOCKET_ERROR{"SOCKET_ERROR"};
 const std::string FAILURE{"FAILURE"};
 const std::string COMPARATOR_FAIL{"COMPARATOR_FAIL"};
+const std::string ZERO_RESULT{"ZERO_RESULT"};
+
 
 // macros
 #define log_err(x) log_1(std::string("Error: ") + x)
