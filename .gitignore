@@ -1,4 +1,5 @@
 *.o
+benchmark/benchmark*.log
 log/exception*.log
 *.gch*
 settings.xml

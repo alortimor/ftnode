@@ -34,7 +34,7 @@ void db_service::operator()() {
 
   do {
     auto tcp_sess = tcp_sess_q.pop_unique();
-    log_2(std::to_string(tcp_sess->get_session_id()) + ":S:");
+    log_2(std::to_string(tcp_sess->get_session_id()) + ":A");
     int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
     
     rq = dbf.get_request(rq_id);

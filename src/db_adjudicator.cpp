@@ -109,7 +109,7 @@ bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
 
 void db_adjudicator::start_request() {
  // v_dg.at(1).exec_conrolled_sql("ALTER SESSION SET SQL_TRACE=TRUE");
-   log_2(std::to_string(tcp_sess->get_session_id()) + ":A:"+std::to_string(req_id));
+   log_2(std::to_string(tcp_sess->get_session_id()) + ":B:"+std::to_string(req_id));
   {
     std::lock_guard<std::mutex> lk(mx);
     try {
@@ -196,7 +196,7 @@ void db_adjudicator::process_request() {
         msg_cnt=0;
         // stop time stamp for this session
         if(tcp_sess) {
-          log_2(std::to_string(tcp_sess->get_session_id()) + ":D:" +std::to_string(req_id));
+          log_2(std::to_string(tcp_sess->get_session_id()) + ":Z:" +std::to_string(req_id));
         }
 
         tcp_sess->client_response(DISCONNECTED + SOCKET_MSG_END_CHAR); // "\n"
