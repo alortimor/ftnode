@@ -108,6 +108,8 @@ bool db_adjudicator::reply_to_client_upon_first_done (int db_id) {
 }
 
 void db_adjudicator::start_request() {
+ // v_dg.at(1).exec_conrolled_sql("ALTER SESSION SET SQL_TRACE=TRUE");
+   log_2(std::to_string(tcp_sess->get_session_id()) + ":A:"+std::to_string(req_id));
   {
     std::lock_guard<std::mutex> lk(mx);
     try {
@@ -122,6 +124,7 @@ void db_adjudicator::start_request() {
       throw std::runtime_error(failure_msg);
     }
   }
+
 }
 
 void db_adjudicator::execute_request() {
@@ -136,7 +139,6 @@ void db_adjudicator::execute_request() {
       fut.get();
   }
   catch (const std::exception& e) { 
-    log_err("execute_request: " + e.what());
     throw std::runtime_error(e.what());
   }
   verify_request();
@@ -162,6 +164,7 @@ void db_adjudicator::process_request() {
             verify_completed=false;
             comparator_pass=false;
             tcp_sess->client_response(COMMITED + SOCKET_MSG_END_CHAR); // "\n"
+            log_2(std::to_string(tcp_sess->get_session_id()) + ":C:"+std::to_string(req_id));
           }
         }
         msg_cnt=0;
@@ -170,6 +173,10 @@ void db_adjudicator::process_request() {
         if ( (!committed) && (!rolled_back) ) {
           rollback_request();
         }
+        if(tcp_sess) {
+          log_2(std::to_string(tcp_sess->get_session_id()) + ":R:"+std::to_string(req_id));
+        }
+
         rolled_back=true;
         verify_completed=false;
         committed=false;
@@ -188,8 +195,9 @@ void db_adjudicator::process_request() {
         db_session_completed=true;
         msg_cnt=0;
         // stop time stamp for this session
-        //if(tcp_sess)
-          //log_2(std::to_string(tcp_sess->get_session_id()));
+        if(tcp_sess) {
+          log_2(std::to_string(tcp_sess->get_session_id()) + ":D:" +std::to_string(req_id));
+        }
 
         tcp_sess->client_response(DISCONNECTED + SOCKET_MSG_END_CHAR); // "\n"
         
@@ -211,7 +219,6 @@ void db_adjudicator::process_request() {
           execute_request();
         }
         catch(std::exception & e ) {
-          log_1(e.what());
           handle_failure(e.what());
           msg_cnt=0;
         }
@@ -307,6 +314,7 @@ void db_adjudicator::handle_failure(const std::string & err) {
   // issue rollback first-off before anything else
   if ( (!committed) && (!rolled_back) ) {
     rollback_request();
+    log_2(std::to_string(tcp_sess->get_session_id()) + ":F:"+std::to_string(req_id));
   }
 
   if ( err==COMPARATOR_FAIL )  {
@@ -360,7 +368,8 @@ void db_executor::execute_sql_grains () {
         catch (SAException &x) {
           failure_msg = "DB Execute error: " + std::string( (const char*)x.ErrText() ) + " DB ID: " 
                       + std::to_string(db_id) + " " +s.get_sql()   + " " + std::to_string(req.get_session_id()) ;
-          cmd->Cancel();
+          //cmd->Cancel();
+          log_1("Failure " + failure_msg);
           throw std::runtime_error(failure_msg);
         }
       }
