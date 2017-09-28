@@ -21,18 +21,6 @@ const long  tcp_session::get_session_id() const {
   return session_id;
 }
 
-/*void tcp_session::stop() {
-  if(m_sock) {
-    boost::system::error_code ec;
-    m_sock->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-    if(ec != 0)
-      log_1("Shutdown Error = " + std::to_string(ec.value()) + ": " + ec.message());
-  }
-  else {
-    log_1("tcp_session::stop: Warning - m_sock is null");
-  }
-}*/
-
 void tcp_session::client_response(const std::string & msg) {
   // Initiate asynchronous write operation.
   std::string buf = msg + SOCKET_MSG_END_CHAR; // "\n" needs to have \n at the end - message format
@@ -77,11 +65,6 @@ void tcp_session::read_handler() {
           }
   );
 }
-
-/*void tcp_session::stop_session() {
-  log_1("Stop Session "+ std::to_string(session_id));
-  stop();
-}*/
 
 // this is called from db_adjudicator class, once the request has been activated
 // and is continually read until the request has been finalised.

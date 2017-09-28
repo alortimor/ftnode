@@ -36,14 +36,16 @@ void db_service::operator()() {
   do {
     auto tcp_sess = tcp_sess_q.pop_unique();
     try {
+      log_2(std::to_string(tcp_sess->get_session_id()) + ":A");
       int rq_id = dbf.make_active (std::move(tcp_sess)); // blocks if no slot is free in the buffer. Uses a stack for managing the free list.
+      
       rq = dbf.get_request(rq_id);
       tp.run_job( [rq, dbf_ptr ]() { rq->process_request(); if (rq->is_active()) dbf_ptr->make_inactive(rq->get_req_id()); });
     }
-    catch ( ... ) { // const ftnode_exception& e
+    catch ( ... ) {
       // tp.stop_service(); // destructor will stop the service
       throw;
-    }
+    }    
   } while (!stop_process);
 
   tp.stop_service();

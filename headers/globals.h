@@ -6,6 +6,7 @@
 
 // Initiates global startup
 void global_init();
+// Used for ftnode execptions which have error codes
 struct ftnode_exception : public std::exception {
   ftnode_exception(int err_code, const std::string& msg="") : 
     message{msg}, error_code{err_code} {}

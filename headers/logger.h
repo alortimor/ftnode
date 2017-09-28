@@ -79,7 +79,7 @@ class logger {
 
 ///////////////////////////////////////////////////////////////////////////////////
 /*
- To use logger 1:
+ logger usage:
  log_1("Hello from logger 1"); 
  To use logger 2:
  log_2("Hello from logger 2");
@@ -124,8 +124,9 @@ class logger {
  // end of example 3
 */
 
-
+// comment out to not compile any loggers
 #define USE_EXCEPTION_LOG
+// comment out to not compile logger1
 #define USE_LOG1 
 #define USE_LOG2 
 #define USE_LOG3 

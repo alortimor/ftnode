@@ -199,6 +199,11 @@ std::string db_executor::generate_concat_columns(const std::string & sql) {
   return concat_str;
 }
 
+void db_executor::exec_conrolled_sql(const std::string & sql) {
+  cmd->setCommandText(sql.c_str());
+  cmd->Execute();
+}
+
 void db_executor::exec_sql(const std::string & sql) {
   try {
     if (sql != "") {

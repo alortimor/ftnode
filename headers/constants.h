@@ -18,7 +18,6 @@ const std::string FAILURE{"FAILURE"};
 const std::string COMPARATOR_FAIL{"COMPARATOR_FAIL"};
 const std::string ZERO_RESULT{"ZERO_RESULT"};
 
-
 // macros
 #define log_err(x) log_1(std::string("Error: ") + x)
 
@@ -32,9 +31,9 @@ const std::string ZERO_RESULT{"ZERO_RESULT"};
 */
 constexpr int ERR_TCP_FAILURE{2};
 constexpr int ERR_DB_CONNECTION{3};
-constexpr int ERR_FILE{4};
+//constexpr int ERR_FILE{4};
 constexpr int ERR_XML_NO_FILE{5};
-constexpr int ERR_XML_FORMAT{6};
+//constexpr int ERR_XML_FORMAT{6};
 
 
 
