@@ -32,7 +32,7 @@ class threadsafe_log {
 	  	file_path += file_name + "_" + time_stamp() + ".log";
       std::ofstream file{file_path, std::fstream::app}; // open file in append mode so nothing is ever overwritten
       if(file) {
-        auto d = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+        auto d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start);
         file << "Start: " << d.count() << std::endl; // write initial duration so as to simplify benchmarking
       }
     }
@@ -44,7 +44,7 @@ class threadsafe_log {
       if(!file_path.empty()) {
         std::ofstream file{file_path, std::fstream::app};
         if(file) {
-          auto d = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+          auto d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start);
           file << "End: " << d.count() << std::endl;
         }
       }
@@ -52,7 +52,7 @@ class threadsafe_log {
     // return value: 0 in success, 2 in failure
     int write (const std::string & msg) {
       // ensure the blocking duration is not included in the calculation written to file.
-      auto d = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start); // calculate duration prior to blocking
+      auto d = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start); // calculate duration prior to blocking
       // now block if other threads are writing as well
       {
         std::lock_guard<std::mutex> lk(mx);
